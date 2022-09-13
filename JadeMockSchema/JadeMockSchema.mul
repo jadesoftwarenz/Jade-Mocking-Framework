@@ -1,5 +1,2 @@
 #MULTIPLE_SCHEMA_EXTRACT
 JadeMockSchema.scm JadeMockSchema.ddx
-JadeTestMockPackageSchema.scm JadeTestMockPackageSchema.ddx
-JadeTestMockSchema.scm JadeTestMockSchema.ddx
-DemoMockSchema.scm DemoMockSchema.ddx

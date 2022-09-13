@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<schema name="JadeMockSchema" JadeVersionNumber="99.0.00" CompleteDefinition="true">
-	<Application name="JadeMockSchema">
+<schema name="JadeTestMockSchema" JadeVersionNumber="99.0.00" CompleteDefinition="true">
+	<Application name="JadeTestMockSchema">
 		<__overridePatchNumber>0</__overridePatchNumber>
 		<__patchControlString/>
 		<_aboutFormName/>
 		<_defaultLocaleId>0</_defaultLocaleId>
 		<_modifiedBy>cnwnhs1</_modifiedBy>
-		<_modifiedTimestamp>2022:01:20:13:52:12.545</_modifiedTimestamp>
+		<_modifiedTimestamp>2022:01:20:15:51:50.660</_modifiedTimestamp>
 		<_patchVersion>0</_patchVersion>
 		<_startupFormName/>
 		<_systemVersion>99.0.00</_systemVersion>
@@ -27,7 +27,7 @@
 		<initializeMethod/>
 		<mdiStyle>0</mdiStyle>
 		<mdiWindowListOrder>0</mdiWindowListOrder>
-		<name>JadeMockSchema</name>
+		<name>JadeTestMockSchema</name>
 		<showBubbleHelp>false</showBubbleHelp>
 		<startupForm/>
 		<useBorderStyleOnly>false</useBorderStyleOnly>
@@ -39,10 +39,6 @@
 		</threeDControls>
 	</Application>
 
-	<Global name="GJadeMockSchema">
+	<Global name="GJadeTestMockSchema">
 	</Global>
-
-	<JadeExportedPackage name="JadeMockPackage">
-		<application name="JadeMockSchema" />
-	</JadeExportedPackage>
 </schema>

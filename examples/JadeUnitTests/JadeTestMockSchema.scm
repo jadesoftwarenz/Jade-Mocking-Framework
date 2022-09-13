@@ -1,4 +1,4 @@
-jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "99.0.00";
 schemaDefinition
 JadeTestMockSchema subschemaOf JadeMockSchema completeDefinition;
 importedPackageDefinitions
@@ -71,6 +71,8 @@ interfaceDefs
 	)
 	I2
 	(
+	subInterfaceOf
+		TestInterfaces
 	jadeMethodDefinitions
 		m2(
 			integer: Integer io; 
@@ -78,11 +80,12 @@ interfaceDefs
 	)
 	I3
 	(
-	subInterfaceOf
-		TestInterfaces
 	)
 	I4
 	(
+	subInterfaceOf
+		I1
+		I3
 	)
 	I5
 	(
@@ -263,6 +266,7 @@ typeDefinitions
 		test_instantiateMockedObject_abstract_class() unitTest;
 		test_instantiateMockedObject_collection_class() unitTest;
 		test_instantiateMockedObject_create_mock_instance() unitTest;
+		test_instantiateMockedObject_delete_mock_instance() unitTest;
 		test_instantiateMockedObject_transient_not_allowed_class() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
@@ -381,7 +385,7 @@ typeDefinitions
 		test_updatesProperties_invalid_parameter_list_bad_type() unitTest;
 		test_updatesProperties_multiple_properties() unitTest;
 		test_updatesProperties_multiple_times() unitTest;
-		test_updatesProperties_objecr_reference() unitTest;
+		test_updatesProperties_object_reference() unitTest;
 		test_updatesProperties_property_not_on_mock_class() unitTest;
 		test_updatesProperties_wrong_value_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
@@ -1036,13 +1040,13 @@ vars
 	interfaceMock			: JadeInterfaceMock;
 
 begin
-	interfaceMock := mockManager.createInterfaceMock(I5);
+	interfaceMock := mockManager.createInterfaceMock(I4);
 	assertNotNull(interfaceMock);
 	assertTrue(app.isValidObject(interfaceMock));
 	assertTrue(interfaceMock.isKindOf(JadeInterfaceMock));
 	assertTrue(interfaceMock.respondsTo(I1));
+	assertTrue(interfaceMock.respondsTo(I3));
 	assertTrue(interfaceMock.respondsTo(I4));
-	assertTrue(interfaceMock.respondsTo(I5));
 	
 epilog
 	delete interfaceMock;
@@ -1539,7 +1543,7 @@ test_injectMockedObject
 {
 test_injectMockedObject() unitTest;
 
-//	inject an existing instance to the class mocked 
+//	inject an existing instance to the class
 
 vars
 	classMock				: JadeClassMock;
@@ -1628,7 +1632,7 @@ test_injectMockedObject_inject_instantiated_object
 {
 test_injectMockedObject_inject_instantiated_object() unitTest;
 
-//	inject an existing instance that has been instantiated by the mock to the class mock
+//	inject an existing instance that has been instantiated by the class mock to the class mock
 
 vars
 	classMock				: JadeClassMock;
@@ -1812,6 +1816,30 @@ begin
 	assertTrue(app.isValidObject(mockedObject));
 	assertFalse(mockedObject.constructorCalled);
 	
+epilog
+	delete classMock;
+end;
+}
+test_instantiateMockedObject_delete_mock_instance
+{
+test_instantiateMockedObject_delete_mock_instance() unitTest;
+
+//	ensure the mock instance is deleted when the class mock is deleted
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	assertTrue(mockedObject <> null);
+	assertTrue(app.isValidObject(mockedObject));
+	app.destructorCalled_c1 := false;
+	delete classMock;
+	assertFalse(app.destructorCalled_c1);
+	assertFalse(app.isValidObject(mockedObject));
+
 epilog
 	delete classMock;
 end;
@@ -3080,7 +3108,7 @@ vars
 
 begin
 	interfaceMock := mockManager.createInterfaceMock(I1);
-	assertFalse(interfaceMock.respondsTo(I3));
+	assertFalse(interfaceMock.respondsTo(I2));
 	
 epilog
 	delete interfaceMock;
@@ -3233,6 +3261,11 @@ begin
 	mockedObject.m1(integer, string);
 	assertEquals(123, integer);
 	assertEquals("foobar", string);
+	integer := 456;
+	string := "raboof";
+	mockedObject.m1(integer, string);
+	assertEquals(456, integer);
+	assertEquals("", string);
 	
 epilog
 	delete classMock;
@@ -3283,7 +3316,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(1, "abc").updatesParameters(2, "def").updatesParameters(3, "hij");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters(1, "abc").updatesParameters(2, "def").updatesParameters(3, "ghi");
 	mockedObject.m1(integer, string);
 	assertEquals(1, integer);
 	assertEquals("abc", string);
@@ -3292,7 +3325,7 @@ begin
 	assertEquals("def", string);
 	mockedObject.m1(integer, string);
 	assertEquals(3, integer);
-	assertEquals("hij", string);
+	assertEquals("ghi", string);
 	integer := -1;
 	string := "xx";
 	mockedObject.m1(integer, string);
@@ -3364,6 +3397,9 @@ begin
 	assertEquals("", mockedObject.name);
 	result := mockedObject.m1(integer, string);
 	assertEquals("name", mockedObject.name);
+	mockedObject.name := "foo";
+	result := mockedObject.m1(integer, string);
+	assertEquals("foo", mockedObject.name);
 	
 epilog
 	delete classMock;
@@ -3474,9 +3510,9 @@ epilog
 	delete classMock;
 end;
 }
-test_updatesProperties_objecr_reference
+test_updatesProperties_object_reference
 {
-test_updatesProperties_objecr_reference() unitTest;
+test_updatesProperties_object_reference() unitTest;
 
 //	test mocking properties - mock an object reference (oid)
 

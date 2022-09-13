@@ -1,4 +1,4 @@
-jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "99.0.00";
 schemaDefinition
 JadeMockSchema subschemaOf RootSchema completeDefinition;
 constantDefinitions
@@ -206,7 +206,7 @@ typeDefinitions
 `Was the mocked method received at least once, by any receiver, with the parameters.`
 		whenCalledDoes(actions: String): JadeMethodMock updating;
 		documentationText
-		`Provide a specific action to to execute when the method mock is called.`
+		`Provide a specific action to execute when the method mock is called.`
 		whenCalledInvoke(
 			targetContext: ApplicationContext; 
 			mockMethodIF: JadeMethodMockIF): JadeMethodMock updating;
@@ -266,6 +266,8 @@ Common code for the updatesProperties() and alwaysUpdatesProperties() methods.`
 	)
 	JadeMock completeDefinition
 	(
+		documentationText
+`An abstract superclass in the framework schema for class and interface mocks. This class implements behaviour common to classes and interfaces.`
 	attributeDefinitions
 		zInjectedMockedObjects:        StringArray protected;
 		documentationText
@@ -297,7 +299,7 @@ Membership is String because Subobject references (exclusive collection) cannot 
 		documentationText
 `Inherits from JadeMock. For a class mock, the instance holds references to instances of the mocked class, and forwards requests to these objects, mocking methods as required. These instances can be instantiated by the class mock or injected by the user.`
 	constantDefinitions
-		MockClassInstancesLifetime_None:Integer = 0;
+		MockClassInstancesLifetime_NotSpecified:Integer = 0;
 		documentationText
 		`Method mocking is not enabled for any instance of any lifetime of this class.`
 		MockClassInstancesLifetime_Persistent:Integer = 1;
@@ -320,6 +322,8 @@ The value must be one or more of the following Integer class constants:
 	MockClassInstancesLifetime_SharedTransient`
 	referenceDefinitions
 		zMockedObjects:                ObjectSet  implicitMemberInverse, protected;
+		documentationText
+`Transient instances of the class being mocked that have been instantiated by this class mock.`
 	jadeMethodDefinitions
 		clearAllMethodMocks();
 		documentationText
@@ -600,6 +604,8 @@ This property is a String because subobject references (exclusive collection) ca
 	)
 	JadeMockAnyArray completeDefinition
 	(
+		documentationText
+`Utility array class for storing values of different types. Object references must be converted to Strings by the caller because exclusive subobject references cannot be added to an Array.`
 	)
 memberKeyDefinitions
 	JadeMethodMockDict completeDefinition
@@ -642,6 +648,11 @@ exportedPackageDefinitions
 	exportedClassDefinitions
 		JadeClassMock transientAllowed, transient 
 		(
+		exportedConstantDefinitions
+			MockClassInstancesLifetime_NotSpecified;
+			MockClassInstancesLifetime_Persistent;
+			MockClassInstancesLifetime_SharedTransient;
+			MockClassInstancesLifetime_Transient;
 		exportedMethodDefinitions
 			clearAllMethodMocks;
 			create;
@@ -724,8 +735,9 @@ zNormaliseValue(any : Any) : Any protected, typeMethod;
 // --------------------------------------------------------------------------------
 // Method:		JadeMockingFramework@zNormaliseValue()
 //
-// Purpose:		Subobject references (exclusive collection) cannot be added to an Array.
-//				This method converts an Object reference to a String.
+// Purpose:		This method converts an Object reference to a String.
+//				This is required in some situations because subobject references (exclusive collection) cannot be added to an Array.
+//				
 //				All other data types are returned unchanged.
 //
 // Parameters:	any - the value to convert.
@@ -748,8 +760,9 @@ zUnnormaliseValue(any : Any) : Object protected, typeMethod;
 // --------------------------------------------------------------------------------
 // Method:		JadeMockingFramework@zUnnormaliseValue()
 //
-// Purpose:		Subobject references (exclusive collection) cannot be added to an Array.
-//				This method converts a String to an Object reference.
+// Purpose:		This method converts a String to an Object reference.
+//				This is required in some situations because subobject references (exclusive collection) cannot be added to an Array.
+//				
 //				It is up to the caller of this method to ensure that the normalised value is an Object reference.
 //
 // Parameters:	any - the value to convert.
@@ -1314,7 +1327,7 @@ whenCalledDoes(actions : String) : JadeMethodMock updating;
 // --------------------------------------------------------------------------------
 // Method:		JadeMethodMock::whenCalledDoes()
 //
-// Purpose:		Provide a specific action to to execute when the method mock is called.
+// Purpose:		Provide a specific action to execute when the method mock is called.
 //
 //				The actions are specified as a JADE code snippet. A transient method is
 //				created to execute this code.
@@ -1916,7 +1929,7 @@ create(mockManager : JadeMockManager; mockedClass : Class) updating;
 // --------------------------------------------------------------------------------
 
 begin
-	self.zInstancesLifetime := MockClassInstancesLifetime_None;
+	self.zInstancesLifetime := MockClassInstancesLifetime_NotSpecified;
 	self.zMockedType := mockedClass;
 	self.zMockManager := mockManager;
 end;
@@ -2012,7 +2025,7 @@ begin
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Class of object being injected is invalid");
 	endif;
 	// validation - all instances not selected
-	if zInstancesLifetime <> MockClassInstancesLifetime_None then
+	if zInstancesLifetime <> MockClassInstancesLifetime_NotSpecified then
 		validLifetime := (isObjectPersistent(mockedObject) and zInstancesLifetime.bitAnd(MockClassInstancesLifetime_Persistent) <> 0) or
 						 (isObjectTransient(mockedObject) and zInstancesLifetime.bitAnd(MockClassInstancesLifetime_Transient) <> 0) or
 						 (isObjectSharedTransient(mockedObject) and zInstancesLifetime.bitAnd(MockClassInstancesLifetime_SharedTransient) <> 0);
@@ -2066,7 +2079,7 @@ begin
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Mocked class not defined");
 	endif;
 	// validation - all class instances not selected
-	if zInstancesLifetime <> MockClassInstancesLifetime_None then
+	if zInstancesLifetime <> MockClassInstancesLifetime_NotSpecified then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "All instances of the class are being mocked");
 	endif;
 	// validation - class cannot be abstract
@@ -2120,11 +2133,11 @@ mockAllInstances(lifetime : Integer) : JadeClassMock updating;
 // Purpose:		Methods are mocked for all instances of the class with the given lifetimes.
 //
 // Parameters:	lifetime	- specifies the lifetime of instances that the method calls are mocked.
-//							  the value must be one or more of the following Integer class constants:
-//									MockClassInstancesLifetime_None
-//									MockClassInstancesLifetime_Persistent
-//									MockClassInstancesLifetime_Transient
-//									MockClassInstancesLifetime_SharedTransient
+//
+//				The value of the lifetime parameter must be the sum of one or more of the following Integer JadeClassMock class constants:
+//								- MockClassInstancesLifetime_Persistent
+//								- MockClassInstancesLifetime_Transient
+//								- MockClassInstancesLifetime_SharedTransient
 //
 // Returns:		The class mock instance.
 // --------------------------------------------------------------------------------
@@ -2307,7 +2320,7 @@ begin
 		// register the method mock for a type method against the class the method is defined on
 		zRegisterMethodMockForInstance(mockedMethod.schemaType, mockedMethod, methodMock);
 	else
-		if zInstancesLifetime = MockClassInstancesLifetime_None then
+		if zInstancesLifetime = MockClassInstancesLifetime_NotSpecified then
 			// register the method mock for all instantiated instances
 			foreach mockedObject in zMockedObjects do
 				zRegisterMethodMockForInstance(mockedObject, mockedMethod, methodMock);
@@ -2349,7 +2362,7 @@ begin
 		// unregister the method mock for a type method from the class the method is defined on
 		zUnregisterMethodMockForInstance(mockedMethod.schemaType, mockedMethod, methodMock);
 	else
-		if zInstancesLifetime = MockClassInstancesLifetime_None then
+		if zInstancesLifetime = MockClassInstancesLifetime_NotSpecified then
 			// unregister the method mock for all instantiated instances
 			foreach mockedObject in zMockedObjects do
 				zUnregisterMethodMockForInstance(mockedObject, mockedMethod, methodMock);
@@ -2406,13 +2419,13 @@ zRegisterMethodMockForClassInstances(classNumber : Integer; lifetime : Integer; 
 //
 // Parameters:	classNumber		- the number of Class for which method calls are to be mocked.
 //				lifetime		- specifies the lifetime of instances that the method calls are mocked.
-//								  the value must be one or more of the following Integer class constants:
-//										MockClassInstancesLifetime_None
-//										MockClassInstancesLifetime_Persistent
-//										MockClassInstancesLifetime_Transient
-//										MockClassInstancesLifetime_SharedTransient
 //				mockedMethod	- the method to mock.
 //				methodMock		- the method mock for the method being mocked.
+//
+//				The value of the lifetime parameter must be the sum of one or more of the following Integer JadeClassMock class constants:
+//								- MockClassInstancesLifetime_Persistent
+//								- MockClassInstancesLifetime_Transient
+//								- MockClassInstancesLifetime_SharedTransient
 // --------------------------------------------------------------------------------
 }
 zRegisterMethodMockForInstance
@@ -2440,13 +2453,13 @@ zUnregisterMethodMockForClassInstances(classNumber : Integer; lifetime : Integer
 //
 // Parameters:	classNumber		- the number of Class for which method calls are to being mocked.
 //				lifetime		- specifies the lifetime of instances that the method calls are mocked.
-//								  the value must be one or more of the following Integer class constants:
-//										MockClassInstancesLifetime_None
-//										MockClassInstancesLifetime_Persistent
-//										MockClassInstancesLifetime_Transient
-//										MockClassInstancesLifetime_SharedTransient
 //				mockedMethod	- the method being mocked.
 //				methodMock		- the method mock for the method being mocked.
+//
+//				The value of the lifetime parameter must be the sum of one or more of the following Integer JadeClassMock class constants:
+//								- MockClassInstancesLifetime_Persistent
+//								- MockClassInstancesLifetime_Transient
+//								- MockClassInstancesLifetime_SharedTransient
 // --------------------------------------------------------------------------------
 }
 zUnregisterMethodMockForInstance
@@ -2762,8 +2775,6 @@ compareParameters(parametersToCheck : JadeMockAnyArray) : Boolean;
 //
 // Purpose:		Compare the parameters with a list of values.
 //
-//				O(n^2) but both collections will always be small, usually 2-5 items, maximum 128.
-//
 // Parameters:	parametersToCheck - the list of values to check.
 //
 // Returns:		Returns true if the parameters match the specified list of values.
@@ -2777,6 +2788,7 @@ begin
 		return false;
 	endif;
 	
+	// O(n^2) but both collections will always be small, usually 2-5 items, maximum 128
 	foreach i in 1 to zParameters.size() do
 		if zParameters[ i ] <> parametersToCheck[ i ] then
 			return false;
