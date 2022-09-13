@@ -9,7 +9,9 @@ Instances created outside the framework can also be injected in to the framework
 This behaviour is supported for instances of any lifetime: persistent, transient, and shared transient.
 
 The Jade Object Manager provides a mechanism that allows a method to be replaced with an alternative method when called by a specific object. 
-The  framework uses this mechanism to replace selected class methods with a default method that mocks the original method.
+The  framework uses this mechanism to replace class methods with a default method that mocks the original method.
+Any class method can be mocked, including event methods, timer methods, and type methods.
+Method mocks for primitive methods are not supported.
 The method mock records the receiver the input parameter values when a method being mocked is called. 
 Default values can also be specified for usage IO or output parameters and the return values. 
 The method mock can be queried the return the call history, call counts, parameter values received, etc. 
@@ -119,6 +121,32 @@ A **JadeClassMock** instance is used to create a **JadeMethodMock** instance for
 
 Method mocks must be unique for a given method and receiving instance.
 
+## Creating a JadeMethodMock for an Event Method
+
+Method mocks for event methods can be defined. The Form instance is injected to receive the call to the mock.
+
+```
+    // inject the form instance in to the class mock and create a method mock for the OK button click event
+    classMock.injectMockedObject(form).mockMethod(MyForm::OKButton_click;
+	
+```
+
+## Creating a JadeMethodMock for a Type Method
+
+The framework defines method mocks for type methods using the Class instance.
+This means the method mock is called regardless of whether the calling code uses an instance of the class or the Class itself.
+
+```
+    classMock.mockMethod(Calculator::reset);
+
+    // call the method mock using the Class instance
+    Calculator@reset();
+
+    // call the method mock using an instance of the Class
+    calculator@reset();
+
+```
+
 ## Defining the behaviour a JadeMethodMock
 
 By default, the mock method captures details of the call, the method receiver and parameter values. 
@@ -208,6 +236,35 @@ Mock all class instances of specified lifetimes (persistent, transient, and shar
     classMock.mockAllInstances(JadeClassMock.MockClassInstancesLifetime_Persistent);
 ```
 
+## Declaring your own JadeMethodMock
+
+A method mock is not restricted to the implementation provided by the framework. 
+An instance of any class that implements the **JadeMethodMockIF** interface can be used to mock methods.
+
+Here is an example showing how the *msgBox* method declared on the **Application** class in the **RootSchema** can be mocked.
+
+The **ApplicationMock** mock class is defined and implements the **JadeMethodMockIF** interface.
+The method *myMethodMock* of the **ApplicationMock** class is mapped to the *methodMock* method of the **JadeMethodMockIF**.
+
+```
+    ApplicationMock::myMethodMock(mockedMethod : Method; receiver : Object input; parameters : ParamListType io) : Any;
+```
+
+The *whenCalledInvoke* method of the method mock is used to replace the default method mock with the method *myMethodMock* of the **ApplicationMock** class.
+
+```
+    // create an instance of a class that implements the JadeMockMethodIF interface.
+    // the mocked method call will be redirected to this instance
+    applicationMock := create ApplicationMock(self) transient;
+
+    // inject app to receive mocked methods
+    classMock.injectMockedObject(app);
+
+    // mock the RootSchema::Application::msgBox() method
+    methodMock_msgBox := classMock.mockMethod(Application::msgBox).whenCalledInvoke(appContext, applicationMock);
+
+```
+
 ## Querying a JadeMethodMock
 
 The method mock can be queried to provide details of the each call. This information includes:
@@ -239,29 +296,33 @@ This example shows various ways the receiver can be validated:
     assertTrue(methodMock.wasReceivedWith(1, "abc")); // parameters on the first call were 1 and "abc"
 ```
 
-## Class JadeClassMock
+## The JadeMockPackage
+
+This section describes the class and methods exported from the **JadeMockPackage**
+
+### Class JadeClassMock
 
 Inherits from JadeMock. For a class mock, the instance holds references to instances of the mocked class, and forwards requests to these objects, mocking methods as required. These instances can be instantiated by the class mock or injected by the user.
 
-### Constants 
+#### Constants 
 
-#### MockClassInstancesLifetime_NotSpecified Integer 0
+##### MockClassInstancesLifetime_NotSpecified Integer 0
 
 Method mocking is not enabled for any instance of any lifetime of this class.
 
-#### MockClassInstancesLifetime_Persistent Integer 1
+##### MockClassInstancesLifetime_Persistent Integer 1
 
 Method mocking is enabled for all persistent instances of this class.
 
-#### MockClassInstancesLifetime_SharedTransient Integer 3
+##### MockClassInstancesLifetime_SharedTransient Integer 3
 
 Method mocking is enabled for all shared transient instances of this class.
 
-#### MockClassInstancesLifetime_Transient Integer 2
+##### MockClassInstancesLifetime_Transient Integer 2
 
 Method mocking is enabled for all transient instances of this class.
 
-#### clearAllMethodMocks
+##### clearAllMethodMocks
 
 Deletes all the method mocks for the class.
 
@@ -270,7 +331,7 @@ Deletes all the method mocks for the class.
     clearAllMethodMocks();
 ```
 
-#### create
+##### create
 
 Constructor for a class mock.
 
@@ -283,7 +344,7 @@ Parameters:
 - mockManager - the JadeMockManager instance that is creating this class mock.
 -  mockedClass - the class being mocked.
 
-#### deleteMockedObject
+##### deleteMockedObject
 
 Delete the mocked object.
 
@@ -295,7 +356,7 @@ Parameters:
 
 - mockedObject - the mocked instance to delete.
 
-#### injectMockedObject
+##### injectMockedObject
 
 Records the specified object for which nominated method calls are mocked.
  This must be an instance of the class for which methods are being mocked.
@@ -314,7 +375,7 @@ Returns:
 
 The class mock instance.
 
-#### instantiateMockedObject
+##### instantiateMockedObject
 
 Instantiate an instance of type of the class being mocked.
 
@@ -330,7 +391,7 @@ Returns:
 
 The instantiated instance.
 
-#### isMethodMockRegisteredForInstance
+##### isMethodMockRegisteredForInstance
 
 Determines if a mock for the method is registered for the instance.
 
@@ -347,7 +408,7 @@ Returns:
 
 Returns true if a mock for the method is registered for the instance, or false if it is not.
 
-#### mockAllInstances
+##### mockAllInstances
 
 Methods are mocked for all instances of the class with the given lifetimes.
 
@@ -368,7 +429,7 @@ Returns:
 
 The class mock instance.
 
-#### mockAllMethodsUpToClass
+##### mockAllMethodsUpToClass
 
 Mock all methods in the class being mocked and all superclasses up to the given class.
 
@@ -386,7 +447,7 @@ Returns:
 
 The class mock instance.
 
-#### mockImportedMethod
+##### mockImportedMethod
 
 Mock the exported method for a method that has been imported in a package.
 
@@ -398,7 +459,7 @@ Returns:
 
 The method mock instance.
 
-#### mockMethod
+##### mockMethod
 
 Mock the method for all instantiated and injected instances being mocked by this class.
 
@@ -414,11 +475,11 @@ Returns:
 
 The method mock instance.
 
-## Class JadeInterfaceMock
+### Class JadeInterfaceMock
 
 Inherits from JadeMock. For an interface mock, the instance is the mocked interface, requests are forwarded to this object, mocking methods as required. The instance is instantiated by the user. Instances of any other class that implements the interface can be injected by the user.
 
-#### create
+##### create
 
 Constructor for an interface mock.
 
@@ -433,7 +494,7 @@ Parameters:
 - mockManager - the JadeMockManager instance that is creating this interface mock.
 -  mockedInterface - the interface being mocked.
 
-#### injectMockedObject
+##### injectMockedObject
 
 Records the specified mocked interface instance for which nominated interface method calls are mocked.
  This must be an existing interface mock instance.
@@ -451,7 +512,7 @@ Returns:
 
 The interface mock instance.
 
-#### isInterfaceMethodMockRegistered
+##### isInterfaceMethodMockRegistered
 
 Determines if a mock is registered for the interface method for the instance.
 
@@ -468,7 +529,7 @@ Returns:
 
 Returns true if a mock is registered for the interface method for the instance, or false if it is not.
 
-#### isInterfaceMockRegistered
+##### isInterfaceMockRegistered
 
 Determines if an interface mock is registered for the instance.
 
@@ -485,11 +546,11 @@ Returns:
 
 Returns true if an interface mock is registered for the instance, or false if it is not.
 
-## Class JadeMethodMock
+### Class JadeMethodMock
 
 Represents a mockery of a single method. This will keep track of the calls to the mocked method. Has methods to mock behaviour and methods useful for validating the calls in testing.
 
-#### alwaysReturns
+##### alwaysReturns
 
 Set the value that will always be returned when the method mock is called.
 
@@ -505,7 +566,7 @@ Returns:
 
 The method mock instance.
 
-#### alwaysUpdatesParameters
+##### alwaysUpdatesParameters
 
 Set the values for usage io/output parameters that will always be returned when the method mock is called.
 
@@ -521,7 +582,7 @@ Returns:
 
 The method mock instance.
 
-#### alwaysUpdatesProperties
+##### alwaysUpdatesProperties
 
 Set the values for properties that will always be returned when the method mock is called.
 
@@ -539,14 +600,14 @@ Returns:
 
 The method mock instance.
 
-#### clearCallHistory
+##### clearCallHistory
 
 Clear the call history of the mock.
 ```
     clearCallHistory();
 ```
 
-#### create
+##### create
 
 Constructor for a method mock.
 
@@ -563,7 +624,7 @@ Parameters:
 - mock - the class or interface mock creating the method mock.
 -  mockedMethod - the method being mocked.
 
-#### getCallCount
+##### getCallCount
 
 Get the number of times this method mock was called.
 
@@ -575,7 +636,7 @@ Returns:
 
 The number of times this method mock was called.
 
-#### getCallHistory
+##### getCallHistory
 
 Get the receiver and parameters for a given call index.
 
@@ -593,7 +654,7 @@ Returns:
 
 The receiver and parameters for a given call index.
 
-#### getMockedMethod
+##### getMockedMethod
 
 Get the method that this method mock mocks.
 
@@ -605,7 +666,7 @@ Returns:
 
 The method that this method mock mocks.
 
-#### isMethodMockRegistered
+##### isMethodMockRegistered
 
 Determine if the method mock is registered for the method.
 
@@ -622,7 +683,7 @@ Returns:
 
 Returns true if the method mock is registered for the method, or false if it is not.
 
-#### returns
+##### returns
 
 Set the value that will be returned when the method mock is called. 
 
@@ -640,7 +701,7 @@ Returns:
 
 The method mock instance.
 
-#### updatesParameters
+##### updatesParameters
 
 Set the values for usage io/output parameters that will be returned when the method mock is called.
 
@@ -658,7 +719,7 @@ Returns:
 
 The method mock instance.
 
-#### updatesProperties
+##### updatesProperties
 
 Set the values for properties that will be updated when the method mock is called.
 
@@ -678,7 +739,7 @@ Returns:
 
 The method mock instance.
 
-#### wasReceived
+##### wasReceived
 
 Was the mocked method received at least once, by any instance, with any parameters.
 
@@ -690,7 +751,7 @@ Returns:
 
 True if the mocked method was received at least once, by any instance, with any parameters, otherwise false.
 
-#### wasReceivedBy
+##### wasReceivedBy
 
 Was the mocked method received at least once, by the receiver, with any parameters.
 
@@ -706,7 +767,7 @@ Returns:
 
 True if the mocked method was received at least once, by the receiver, with any parameters, otherwise false.
 
-#### wasReceivedByWith
+##### wasReceivedByWith
 
 Was the mocked method received at least once, by the receiver, with the parameters.
 
@@ -723,7 +784,7 @@ Returns:
 
 True if the mocked method was received at least once, by the receiver, with the parameters, otherwise false.
 
-#### wasReceivedOnce
+##### wasReceivedOnce
 
 Was the mocked method received once, by any receiver, with any parameters.
 
@@ -735,7 +796,7 @@ Returns:
 
 True if the mocked method was received once, by any receiver, with any parameters, otherwise false.
 
-#### wasReceivedOnceBy
+##### wasReceivedOnceBy
 
 Was the mocked method received once, by the receiver, with any parameters.
 
@@ -751,7 +812,7 @@ Returns:
 
 True if the mocked method was received once, by the receiver, with any parameters, otherwise false.
 
-#### wasReceivedOnceByWith
+##### wasReceivedOnceByWith
 
 Was the mocked method received once, by the receiver, with the parameters.
 
@@ -768,7 +829,7 @@ Returns:
 
 True if the mocked method was received once, by the receiver, with the parameters, otherwise false.
 
-#### wasReceivedOnceWith
+##### wasReceivedOnceWith
 
 Was the mocked method received once, by any receiver, with the parameters.
 
@@ -784,7 +845,7 @@ Returns:
 
 True if the mocked method was received once, by any receiver, with the parameters, otherwise false.
 
-#### wasReceivedWith
+##### wasReceivedWith
 
 Was the mocked method received at least once, by any receiver, with the parameters.
 
@@ -800,7 +861,7 @@ Returns:
 
 True if the mocked method was received once, by any receiver, with the parameters, otherwise false.
 
-#### whenCalledDoes
+##### whenCalledDoes
 
 Provide a specific action to execute when the method mock is called.
 
@@ -819,7 +880,7 @@ Returns:
 
 The method mock instance.
 
-#### whenCalledInvoke
+##### whenCalledInvoke
 
 Provide an instance that will mock the method call.
 
@@ -838,11 +899,11 @@ Returns:
 
 The method mock instance.
 
-## Class JadeMock
+### Class JadeMock
 
 An abstract superclass in the framework schema for class and interface mocks. This class implements behaviour common to classes and interfaces.
 
-#### getMethodMock
+##### getMethodMock
 
 Get the method mock for the specified method.
 
@@ -858,7 +919,7 @@ Returns:
 
 The method mock for the specified method, null if not found.
 
-#### getMockedType
+##### getMockedType
 
 Get the class or interface that owns this mock.
 
@@ -870,7 +931,7 @@ Returns:
 
 The class or interface that owns this mock.
 
-#### injectMockedObject
+##### injectMockedObject
 
 Records the specified object for which nominated method calls are mocked.
  This must be an instance of the class or interface for which methods are being mocked.
@@ -889,15 +950,15 @@ Returns:
 
 The class or interface mock instance.
 
-## Class JadeMockAnyArray
+### Class JadeMockAnyArray
 
 Utility array class for storing values of different types. Object references must be converted to Strings by the caller because exclusive subobject references cannot be added to an Array.
 
-## Class JadeMockManager
+### Class JadeMockManager
 
 Class to manage mocking framework classes. The framework requires a transient instance of this class to allow method mocks to be created. Multiple managers are allowed, but a single instance should be enough for any given test suite. The JadeMockManager instance owns the JadeClassMock instances, these instances are deleted when the JadeMockManager instance is deleted.
 
-#### createClassMock
+##### createClassMock
 
 Create a class mock for the Class.
 
@@ -913,7 +974,7 @@ Returns:
 
 The created class mock instance.
 
-#### createInterfaceMock
+##### createInterfaceMock
 
 Create an interface mock for the Interface.
 
@@ -929,7 +990,7 @@ Returns:
 
 The created interface mock instance.
 
-#### deleteClassMock
+##### deleteClassMock
 
 Delete a Class mock.
 
@@ -941,7 +1002,7 @@ Parameters:
 
 - classMock - the class mock to delete.
 
-#### deleteInterfaceMock
+##### deleteInterfaceMock
 
 Delete an interface mock.
 
@@ -953,11 +1014,11 @@ Parameters:
 
 - interfaceMock - the interface mock to delete.
 
-## Class JadeMockingFramework
+### Class JadeMockingFramework
 
 An abstract grouping superclass in the framework schema for classes relating to mocking. Has no properties, constants, or methods. All subclasses have transient instance lifetimes and are final to the schema - user subclasses are not allowed.
 
-#### isMockedObject
+##### isMockedObject
 
 Determines if the object specified has been instantiated by any JadeClassMock.
 
