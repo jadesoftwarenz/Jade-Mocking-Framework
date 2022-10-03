@@ -1613,7 +1613,6 @@ test_injectMockedObject_inject_duplicate_object() unitTest;
 
 vars
 	classMock				: JadeClassMock;
-	methodMock				: JadeMethodMock;
 	c1						: C1;
 
 begin
@@ -1637,7 +1636,6 @@ test_injectMockedObject_inject_instantiated_object() unitTest;
 vars
 	classMock				: JadeClassMock;
 	mockedObject			: C1;
-	methodMock				: JadeMethodMock;
 
 begin
 	classMock := mockManager.createClassMock(C1);

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <schema name="JadeTestMockPackageSchema" JadeVersionNumber="99.0.00" CompleteDefinition="true">
 	<Application name="JadeTestMockPackageSchema">
 		<__overridePatchNumber>0</__overridePatchNumber>
@@ -38,9 +38,6 @@
 			<GUIClass name="CheckBox" />
 		</threeDControls>
 	</Application>
-
-	<Global name="GJadeTestMockPackageSchema">
-	</Global>
 
 	<JadeExportedPackage name="JadeTestMockPackage">
 		<application name="JadeTestMockPackageSchema" />

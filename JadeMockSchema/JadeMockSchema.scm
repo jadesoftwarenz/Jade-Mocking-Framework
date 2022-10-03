@@ -1142,7 +1142,6 @@ vars
 	iterator				: Iterator;
 	mockCallHistory 		: JadeMockCallHistory;
 	anyArray 				: JadeMockAnyArray;
-	parameter				: Any;
 	i						: Integer;
 
 begin
@@ -1249,6 +1248,7 @@ begin
 	if not iterator.next(nextMockCallHistory) or nextMockCallHistory.getReceiver() <> receiver or mockCallHistory.getMockedMethod() <> zMockedMethod then
 		return zMockCallHistories.size() = 1 and zMockCallHistories.first().JadeMockCallHistory.compareParameters(anyArray);
 	endif;
+	return false;
 	
 epilog
 	delete iterator;
@@ -1492,7 +1492,6 @@ zMockParameters(callHistory : JadeMockCallHistory input; actualParameters : Para
 
 vars
 	callIndex				: Integer;
-	parameters				: JadeMockAnyArray;
 	updateParameters		: Boolean;
 	parameter				: Any;
 	i						: Integer;

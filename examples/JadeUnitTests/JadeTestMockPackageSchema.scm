@@ -1,4 +1,4 @@
-jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "99.0.00";
 schemaDefinition
 JadeTestMockPackageSchema subschemaOf RootSchema completeDefinition;
 localeDefinitions
@@ -10,7 +10,6 @@ typeHeaders
 	C1 subclassOf JadeTestMockPackageClasses;
 	SJadeTestMockPackageSchema subclassOf RootSchemaSession transient, sharedTransientAllowed, transientAllowed, subclassSharedTransientAllowed, subclassTransientAllowed;
 membershipDefinitions
- 
 typeDefinitions
 	Object completeDefinition
 	(

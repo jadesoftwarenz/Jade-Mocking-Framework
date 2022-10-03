@@ -38,7 +38,4 @@
 			<GUIClass name="CheckBox" />
 		</threeDControls>
 	</Application>
-
-	<Global name="GDemoMockSchema">
-	</Global>
 </schema>

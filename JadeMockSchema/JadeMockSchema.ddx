@@ -39,9 +39,6 @@
 		</threeDControls>
 	</Application>
 
-	<Global name="GJadeMockSchema">
-	</Global>
-
 	<JadeExportedPackage name="JadeMockPackage">
 		<application name="JadeMockSchema" />
 	</JadeExportedPackage>
