@@ -23,7 +23,8 @@ typeHeaders
 	JadeInterfaceMock subclassOf JadeMock transient, final, subschemaFinal, transientAllowed;
 	JadeMockCallHistory subclassOf JadeMockingFramework transient, final, subschemaFinal, transientAllowed;
 	JadeMockManager subclassOf JadeMockingFramework transient, final, subschemaFinal, transientAllowed;
-	JadeMockPropertyValues subclassOf JadeMockingFramework transient, final, subschemaFinal, transientAllowed;
+	JadeMockParameters subclassOf JadeMockingFramework transient, subschemaFinal, transientAllowed, subclassTransientAllowed;
+	JadeMockProperties subclassOf JadeMockingFramework transient, final, subschemaFinal, transientAllowed;
 	SJadeMockSchema subclassOf RootSchemaSession transient, sharedTransientAllowed, transientAllowed, subclassSharedTransientAllowed, subclassTransientAllowed;
 	JadeMethodMockDict subclassOf MemberKeyDictionary loadFactor = 66, transient, final;
 	JadeMockCallHistoriesByReceiverDict subclassOf MemberKeyDictionary duplicatesAllowed, loadFactor = 66, transient, final;
@@ -97,12 +98,6 @@ typeDefinitions
 		zAlwaysUpdatesPropertiesSameValues:Boolean protected;
 		documentationText
 		`Fixed values have been specified to mock updates to properties.`
-		zHasUpdatesToParameters:       Boolean protected;
-		documentationText
-		`Mock values have been provided for Usage IO or Usage Output parameters.`
-		zHasUpdatesToProperties:       Boolean protected;
-		documentationText
-		`Fixed values have been specified to mock updates to properties.`
 		zMockedReturnValues:           JadeMockAnyArray protected;
 		documentationText
 		`Values to use to mock the return value.`
@@ -122,15 +117,12 @@ typeDefinitions
 		zMockedMethod:                 Method  protected;
 		documentationText
 		`The method that has been mocked.`
-		zMockedParameterValueTypes:    ObjectArray  implicitMemberInverse, protected;
+		zMockedParameters:             ObjectArray  implicitMemberInverse, protected;
 		documentationText
-`Types of the values to use to mock updates to Usage IO or Usage Output parameters.`
-		zMockedParameterValues:        ObjectArray  implicitMemberInverse, protected;
-		documentationText
-		`Values to use to mock updates to Usage IO or Usage Output parameters.`
+		`Names and values to use to mock Usage IO or Usage Output parameter values.`
 		zMockedProperties:             ObjectArray  implicitMemberInverse, protected;
 		documentationText
-		`Values to use to mock updates to properties.`
+		`Properties and values to use to mock updates to properties.`
 		zMockedReturnValueTypes:       TypeColl  implicitMemberInverse, protected;
 		documentationText
 		`Types of the values to use to mock the return value.`
@@ -236,7 +228,7 @@ typeDefinitions
 		documentationText
 `Set the value that will be returned when the method mock is called. 
 Common code for the returns() and alwaysReturns() methods.`
-		zUpdatesParameters(values: ParamListType) updating, protected;
+		zUpdatesParameters(parameterNamesAndValues: ParamListType) updating, protected;
 		documentationText
 `Set the values for usage io/output parameters that will always be returned when the method mock is called.
 Common code for the updatesParameters() and alwaysUpdatesParameters() methods.`
@@ -477,9 +469,15 @@ This property is a String because subobject references (exclusive collection) ca
 		documentationText
 		`The method being mocked.`
 	jadeMethodDefinitions
+		addParameterValue(parameterValue: Any) updating;
+		documentationText
+		`Add the parameter value to the call history.`
 		compareParameters(parametersToCheck: JadeMockAnyArray): Boolean;
 		documentationText
 		`Compare the parameters with a list of values.`
+		copyParameters(parameters: JadeMockAnyArray input);
+		documentationText
+		`Copy the parameters to the specified collection.`
 		create(
 			receiver: Object; 
 			mockedMethod: Method) updating;
@@ -488,9 +486,6 @@ This property is a String because subobject references (exclusive collection) ca
 		getMockedMethod(): Method;
 		documentationText
 		`Returns the method being mocked of this JadeMockCallInstance instance.`
-		getParameters(): JadeMockAnyArray;
-		documentationText
-		`Returns the parameters of this JadeMockCallInstance instance.`
 		getReceiver(): Object;
 		documentationText
 		`Returns the receiver of this JadeMockCallInstance instance.`
@@ -524,7 +519,23 @@ This property is a String because subobject references (exclusive collection) ca
 		documentationText
 		`Destructor for a mock manager.`
 	)
-	JadeMockPropertyValues completeDefinition
+	JadeMockParameters completeDefinition
+	(
+		documentationText
+`The parameter names and values used to update Usage IO and Usage Output parameters when the method mock is called.`
+	attributeDefinitions
+		parameterIndexes:              IntegerArray;
+		documentationText
+`The index of the Usage IO or Usage Output parameters to update when the method mock is called.`
+		parameterValues:               JadeMockAnyArray;
+		documentationText
+`The values used to update the Usage IO and Usage Output parameters when the method mock is called.`
+	referenceDefinitions
+		parameterTypes:                TypeColl  implicitMemberInverse;
+		documentationText
+`The type of Usage IO and Usage Output parameters that are updated when the method mock is called.`
+	)
+	JadeMockProperties completeDefinition
 	(
 		documentationText
 `The properties and values used to update properties when the method mock is called.`
@@ -552,6 +563,11 @@ This property is a String because subobject references (exclusive collection) ca
 	Routine completeDefinition
 	(
 	jadeMethodDefinitions
+		getParameter(
+			parameterName: String; 
+			index: Integer output): Parameter;
+		documentationText
+		`Returns the parameter with the given name defined on this Routine instance.`
 		getParameters(): ParameterColl;
 		documentationText
 		`Returns the parameters defined on this Routine instance.`
@@ -640,7 +656,8 @@ databaseDefinitions
 		JadeMockCallHistoriesByReceiverDict in "JadeMockSchema";
 		JadeMockCallHistory in "JadeMockSchema";
 		JadeMockManager in "JadeMockSchema";
-		JadeMockPropertyValues in "JadeMockSchema";
+		JadeMockParameters in "JadeMockSchema";
+		JadeMockProperties in "JadeMockSchema";
 		JadeMockingFramework in "JadeMockSchema";
 		SJadeMockSchema in "_environ";
 	)
@@ -835,14 +852,16 @@ alwaysUpdatesParameters(values : ParamListType) : JadeMethodMock updating;
 //
 // Purpose:		Set the values for usage io/output parameters that will always be returned when the method mock is called.
 //
-// Parameters:	values - the parameter values to return.
+// Parameters:	propertiesAndValues - variable list of pairs of parameter names and values:
+//					parameter		- the name of the parameter to update.
+//					value			- the value to set.
 //
 // Returns:		The method mock instance.
 // --------------------------------------------------------------------------------
 
 begin
 	// validation - parameter values already specified
-	if zMockedParameterValues.size() <> 0 then
+	if zMockedParameters.size() <> 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed parameter values have already been specified");
 	endif;
 	// validation - make sure the method mock has not already been called
@@ -954,8 +973,7 @@ begin
 		process.deleteTransientMethod(zMyMethodToAction);
 	endif;
 	zMockCallHistories.purge();
-	zMockedParameterValues.purge();
-	zMockedParameterValueTypes.purge();
+	zMockedParameters.purge();
 	zMockedProperties.purge();
 	
 	zUnregisterMethodMock(self);
@@ -1002,7 +1020,7 @@ begin
 	receiver := zMockCallHistories[ callIndex ].JadeMockCallHistory.getReceiver();
 	
 	parameters.clear();
-	zMockCallHistories[ callIndex ].JadeMockCallHistory.getParameters().copy(parameters);
+	zMockCallHistories[ callIndex ].JadeMockCallHistory.copyParameters(parameters);
 end;
 }
 getMockedMethod
@@ -1063,7 +1081,9 @@ updatesParameters(values : ParamListType) : JadeMethodMock updating;
 //
 //				This method can be called multiple times to return consecutive values.
 //
-// Parameters:	values - the parameter values to return.
+// Parameters:	propertiesAndValues - variable list of pairs of parameter names and values:
+//					parameter		- the name of the parameter to update.
+//					value			- the value to set.
 //
 // Returns:		The method mock instance.
 // --------------------------------------------------------------------------------
@@ -1435,7 +1455,7 @@ begin
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Mocked return value has been specified");
 	endif;
 	// validation - can not combine with updating parameters
-	if zMockedParameterValues.size() <> 0 then
+	if zMockedParameters.size() <> 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Mocked parameter values have been specified");
 	endif;
 	
@@ -1520,7 +1540,10 @@ zMockParameters(callHistory : JadeMockCallHistory input; actualParameters : Para
 vars
 	callIndex				: Integer;
 	updateParameters		: Boolean;
-	parameter				: Any;
+	mockParameters			: JadeMockParameters;
+	parameterIndex			: Integer;
+	parameterValue			: Any;
+	parameterType			: Type;
 	i						: Integer;
 
 begin
@@ -1531,22 +1554,28 @@ begin
 		callIndex := zMockCallHistories.size();
 	endif;
 	
-	updateParameters := zHasUpdatesToParameters and callIndex <= zMockedParameterValues.size();
-
-	// save and update the parameter values
+	// save the parameter values
 	foreach i in 1 to app.getParamListTypeLength(actualParameters) do
 		// convert an oid to a string to allow for subobjects (exclusive collections)
-		callHistory.getParameters().add(zNormaliseValue(app.getParamListTypeEntry(i, actualParameters)));
+		callHistory.addParameterValue(zNormaliseValue(app.getParamListTypeEntry(i, actualParameters)));
+	endforeach;
 
-		// update usage io/output parameters
-		if updateParameters and zMockedMethod.getParameters()[ i ].usage >= Parameter.Usage_IO then
-			parameter := zMockedParameterValues[ callIndex ].JadeMockAnyArray[ i ];
-			// oids are converted to strings to allow for subobject (exclusive collection) references
-			if zMockedMethod.getParameters()[ i ].type.isKindOf(Class) or zMockedParameterValueTypes[ callIndex ].isKindOf(Class) then
-				parameter := zUnnormaliseValue(parameter);
-			endif;
-			app.setParamListTypeEntry(i, parameter, actualParameters);
+	// nothing more to do if we've run out of values
+	if callIndex > zMockedParameters.size() then
+		return;
+	endif;
+
+	// update usage io/output parameters
+	mockParameters := zMockedParameters[ callIndex ].JadeMockParameters;
+	foreach i in 1 to mockParameters.parameterIndexes.size() do
+		parameterIndex := mockParameters.parameterIndexes[ i ];
+		parameterValue := mockParameters.parameterValues[ i ];
+		parameterType := mockParameters.parameterTypes[ i ];
+		// oids are converted to strings to allow for subobject (exclusive collection) references
+		if parameterType.isKindOf(Class) then
+			parameterValue := zUnnormaliseValue(parameterValue);
 		endif;
+		app.setParamListTypeEntry(parameterIndex, parameterValue, actualParameters);
 	endforeach;
 end;
 }
@@ -1564,7 +1593,7 @@ zMockProperties(receiver : Object input) updating, protected;
 
 vars
 	callIndex				: Integer;
-	mockPropertyValues		: JadeMockPropertyValues;
+	mockPropertyValues		: JadeMockProperties;
 	i						: Integer;
 
 begin
@@ -1581,7 +1610,7 @@ begin
 	endif;
 	
 	// update the properties
-	mockPropertyValues := zMockedProperties[ callIndex ].JadeMockPropertyValues;
+	mockPropertyValues := zMockedProperties[ callIndex ].JadeMockProperties;
 	foreach i in 1 to mockPropertyValues.properties.size() do
 		receiver.setPropertyValue(mockPropertyValues.properties[ i ].name, mockPropertyValues.propertyValues[ i ]);
 	endforeach;
@@ -1676,7 +1705,7 @@ end;
 }
 zUpdatesParameters
 {
-zUpdatesParameters(values : ParamListType) updating, protected;
+zUpdatesParameters(parameterNamesAndValues : ParamListType) updating, protected;
 
 // --------------------------------------------------------------------------------
 // Method:		JadeMethodMock::zUpdatesParameters()
@@ -1685,16 +1714,19 @@ zUpdatesParameters(values : ParamListType) updating, protected;
 //
 //				Common code for the updatesParameters() and alwaysUpdatesParameters() methods.
 //
-// Parameters:	values - the parameter values to return.
+// Parameters:	parameterNamesAndValues - variable list of pairs of properties and values:
+//					parameterName	- the name of the parameter to update.
+//					value			- the value to set.
 // --------------------------------------------------------------------------------
 
 vars
+	mockParameters			: JadeMockParameters;
+	parameterName			: String;
 	parameter				: Parameter;
+	parameterIndex			: Integer;
 	parameterValue			: Any;
 	parameterType			: Type;
 	valueType				: Type;
-	parameterValues			: JadeMockAnyArray;
-	parameterValueTypes		: TypeColl;
 	i						: Integer;
 
 begin
@@ -1702,25 +1734,27 @@ begin
 	if zMockedMethod.getParameters().size() = 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Mocked method does not have parameters");
 	endif;
-	// validation - must have all the parameters
-	if zMockedMethod.getParameters().size() <> app.getParamListTypeLength(values) then
-		SystemException.raise_(MockError_MockParameterValidationFailed, "Incorrect number of parameters for the mocked method");
+	// validation - must be given a list of pair of parameter names and values
+	if app.getParamListTypeLength(parameterNamesAndValues) = 0 or app.getParamListTypeLength(parameterNamesAndValues) mod 2 <> 0 then
+		SystemException.raise_(MockError_MockParameterValidationFailed, "Invalid parameter name and value pairs");
 	endif;
 	// validation - user defined method to invoke already specified
 	if zMethodMockIF <> self then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Another method mock is defined");
 	endif;
 
-	parameterValues := create JadeMockAnyArray() transient;
-	zMockedParameterValues.add(parameterValues);
-
-	parameterValueTypes := create TypeColl() transient;
-	zMockedParameterValueTypes.add(parameterValueTypes);
-
-	foreach i in 1 to app.getParamListTypeLength(values) do
-		parameterValue := app.getParamListTypeEntry(i, values);
+	mockParameters := create JadeMockParameters() transient;
+	zMockedParameters.add(mockParameters);
+	
+	foreach i in 1 to app.getParamListTypeLength(parameterNamesAndValues) step 2 do
+		parameterName := app.getParamListTypeEntry(i, parameterNamesAndValues).String;
+		parameterValue := app.getParamListTypeEntry(i + 1, parameterNamesAndValues);
 		valueType := parameterValue.getType();
-		parameter := zMockedMethod.getParameters()[ i ];
+		parameter := zMockedMethod.getParameter(parameterName, parameterIndex);
+		// validation - parameter must exist
+		if parameter = null then
+			SystemException.raise_(MockError_MockParameterValidationFailed, "Parameter " & parameterName & " is not defined");
+		endif;
 		parameterType := parameter.type; 
 		// validation - parameter must be usage io or output
 		if parameter.usage <> Parameter.Usage_IO and parameter.usage <> Parameter.Usage_Output then
@@ -1737,14 +1771,14 @@ begin
 			endif;
 		endif;
 
-		// convert an oid to a string to allow for subobjects (exclusive collections)
-		parameterValues.add(zNormaliseValue(parameterValue));
+		mockParameters.parameterIndexes.add(parameterIndex);
 		
-		// save the type of the return value so that Objects can be converted back to correct type
-		parameterValueTypes.add(valueType);
+		// convert an oid to a string to allow for subobjects (exclusive collections)
+		mockParameters.parameterValues.add(zNormaliseValue(parameterValue));
+		
+		// save the type of the parameter value so that Objects can be converted back to correct type
+		mockParameters.parameterTypes.add(valueType);
 	endforeach;
-	
-	zHasUpdatesToParameters := true;
 end;
 }
 zUpdatesProperties
@@ -1764,7 +1798,7 @@ zUpdatesProperties(propertiesAndValues : ParamListType) updating, protected;
 // --------------------------------------------------------------------------------
 
 vars
-	mockPropertyValues		: JadeMockPropertyValues;
+	mockProperties			: JadeMockProperties;
 	property 				: Property;
 	value 					: Any;
 	i						: Integer;
@@ -1779,8 +1813,8 @@ begin
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Invalid property and value pairs");
 	endif;
 
-	mockPropertyValues := create JadeMockPropertyValues() transient;
-	zMockedProperties.add(mockPropertyValues);
+	mockProperties := create JadeMockProperties() transient;
+	zMockedProperties.add(mockProperties);
 
 	foreach i in 1 to app.getParamListTypeLength(propertiesAndValues) step 2 do
 		property := app.getParamListTypeEntry(i, propertiesAndValues).Property;
@@ -1800,11 +1834,9 @@ begin
 			endif;
 		endif;
 		
-		mockPropertyValues.properties.add(property);
-		mockPropertyValues.propertyValues.add(value);
+		mockProperties.properties.add(property);
+		mockProperties.propertyValues.add(value);
 	endforeach;
-
-	zHasUpdatesToProperties := true;
 end;
 }
 	externalMethodSources
@@ -2792,6 +2824,22 @@ zUnregisterInterfaceMock(mockedObject : Object; mockedInterface : JadeInterface)
 	)
 	JadeMockCallHistory (
 	jadeMethodSources
+addParameterValue
+{
+addParameterValue(parameterValue : Any) updating;
+
+// --------------------------------------------------------------------------------
+// Method:		JadeMockCallHistory::addParameterValue()
+//
+// Purpose:		Add the parameter value to the call history.
+//
+// Parameters:	parameterValue - the parameter value.
+// --------------------------------------------------------------------------------
+
+begin
+	zParameters.add(parameterValue);
+end;
+}
 compareParameters
 {
 compareParameters(parametersToCheck : JadeMockAnyArray) : Boolean;
@@ -2822,6 +2870,22 @@ begin
 	endforeach;
 	
 	return true;
+end;
+}
+copyParameters
+{
+copyParameters(parameters : JadeMockAnyArray input);
+
+// --------------------------------------------------------------------------------
+// Method:		JadeMockCallHistory::copyParameters()
+//
+// Purpose:		Copy the parameters to the specified collection.
+//
+// Parameters:	parameters - the collection to copy the parameters to.
+// --------------------------------------------------------------------------------
+
+begin
+	zParameters.copy(parameters);
 end;
 }
 create
@@ -2864,22 +2928,6 @@ getMockedMethod() : Method;
 
 begin
 	return zMockedMethod;
-end;
-}
-getParameters
-{
-getParameters() : JadeMockAnyArray;
-
-// --------------------------------------------------------------------------------
-// Method:		JadeMockCallHistory::getParameters()
-//
-// Purpose:		Returns the parameters of this JadeMockCallInstance instance.
-//
-// Returns:		The parameters of this JadeMockCallInstance instance.
-// --------------------------------------------------------------------------------
-
-begin
-	return zParameters;
 end;
 }
 getReceiver
@@ -2999,6 +3047,36 @@ delete() is mockManagerDelete in jom updating;
 	)
 	Routine (
 	jadeMethodSources
+getParameter
+{
+getParameter(parameterName : String; index : Integer output) : Parameter;
+
+// --------------------------------------------------------------------------------
+// Method:		Routine::getParameter()
+//
+// Purpose:		Returns the parameter with the given name defined on this Routine instance.
+//
+// Parameters:	name - the name of the parameter.
+//				index - the relative index of the parameter;
+//
+// Returns:		The parameter with the given name defined on this Routine instance.
+// --------------------------------------------------------------------------------
+
+vars
+	parameter				: Parameter;
+	
+begin
+	foreach parameter in parameters do
+		index += 1;
+		if parameter.name = parameterName then
+			return parameter;
+		endif;
+	endforeach;
+	
+	// not found
+	return null;
+end;
+}
 getParameters
 {
 getParameters() : ParameterColl;

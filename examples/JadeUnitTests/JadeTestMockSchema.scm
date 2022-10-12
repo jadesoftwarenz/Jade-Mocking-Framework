@@ -374,10 +374,11 @@ typeDefinitions
 	jadeMethodDefinitions
 		test_updatesParameters_already_called() unitTest;
 		test_updatesParameters_input() unitTest;
+		test_updatesParameters_invalid_name() unitTest;
+		test_updatesParameters_invalid_type() unitTest;
 		test_updatesParameters_io() unitTest;
 		test_updatesParameters_io_and_return() unitTest;
 		test_updatesParameters_io_multiple_times() unitTest;
-		test_updatesParameters_wrong_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -816,7 +817,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m2).alwaysUpdatesParameters(123, "foobar");
+	methodMock := classMock.mockMethod(C1::m2).alwaysUpdatesParameters("integer", 123, "string", "foobar");
 	integer := 123;
 	string := "hello world";
 	result := mockedObject.m1(integer, string);
@@ -859,7 +860,7 @@ begin
 	string := "hello world";
 	result := mockedObject.m1(integer, string);
 	expectedException(MockError_MethodMockAlreadyCalled);
-	methodMock.alwaysUpdatesParameters(123, "foobar");
+	methodMock.alwaysUpdatesParameters("integer", 123, "string", "foobar");
 	
 epilog
 	delete classMock;
@@ -881,7 +882,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m5).alwaysUpdatesParameters(self);
+	methodMock := classMock.mockMethod(C1::m5).alwaysUpdatesParameters("object", self);
 	object := app;
 	result := mockedObject.m5(object);
 	assertEquals(self, object);
@@ -2291,7 +2292,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(JadeTestMockPackage::C1);
 	mockedObject := classMock.instantiateMockedObject().JadeTestMockPackage::C1;
-	methodMock := classMock.mockImportedMethod(JadeTestMockPackage::C1::m2).updatesParameters(123, "foobar").returns("foobar");
+	methodMock := classMock.mockImportedMethod(JadeTestMockPackage::C1::m2).updatesParameters("integer", 123, "string", "foobar").returns("foobar");
 	integer := 1;
 	string := "string";
 	result := mockedObject.m1(integer, string);
@@ -2566,7 +2567,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(JadeTestMockPackage::C1);
 	mockedObject := classMock.instantiateMockedObject().JadeTestMockPackage::C1;
-	methodMock := classMock.mockMethod(JadeTestMockPackage::C1::m2.exportedMethod.method).updatesParameters(123, "foobar").returns("foobar");
+	methodMock := classMock.mockMethod(JadeTestMockPackage::C1::m2.exportedMethod.method).updatesParameters("integer", 123, "string", "foobar").returns("foobar");
 	integer := 1;
 	string := "string";
 	result := mockedObject.m1(integer, string);
@@ -2628,7 +2629,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(123, "foobar").returns("foobar");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters("integer", 123, "string", "foobar").returns("foobar");
 	integer := 1;
 	string := "foobar";
 	result := mockedObject.invokeIOMethod(appContext, C1::m1, integer, string).String;
@@ -2767,7 +2768,7 @@ begin
 
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m1).updatesParameters(123, "foobar").returns("foobar");
+	methodMock := classMock.mockMethod(C1::m1).updatesParameters("integer", 123, "string", "foobar").returns("foobar");
 	integer := 1;
 	string := "string";
 	result := mockedObject.m1(integer, string);
@@ -2984,7 +2985,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::typeMethod).updatesParameters(123, "foobar").returns("returns foobar");
+	methodMock := classMock.mockMethod(C1::typeMethod).updatesParameters("integer", 123, "string", "foobar").returns("returns foobar");
 	integer := 1;
 	string := "initial";
 	result := mockedObject.callTypeMethod(integer, string);
@@ -3019,7 +3020,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::typeMethod).updatesParameters(123, "foobar").returns("returns foobar");
+	methodMock := classMock.mockMethod(C1::typeMethod).updatesParameters("integer", 123, "string", "foobar").returns("returns foobar");
 	c1 := create C1() transient;
 	integer := 1;
 	string := "initial";
@@ -3074,7 +3075,7 @@ vars
 
 begin
 	interfaceMock := mockManager.createInterfaceMock(I1);
-	methodMock := interfaceMock.getMethodMock(I1::m1).updatesParameters(99, "bar").returns("abc");
+	methodMock := interfaceMock.getMethodMock(I1::m1).updatesParameters("integer", 99, "string", "bar").returns("abc");
 	i1 := interfaceMock.I1;
 	c2 := create C2() transient;
 	integer := 123;
@@ -3321,7 +3322,7 @@ begin
 	string := "hello world";
 	result := mockedObject.m1(integer, string);
 	expectedException(MockError_MethodMockAlreadyCalled);
-	methodMock.updatesParameters(123, "foobar");
+	methodMock.updatesParameters("integer", 123, "string", "foobar");
 	
 epilog
 	delete classMock;
@@ -3342,7 +3343,49 @@ begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
 	expectedException(MockError_MockParameterValidationFailed);
-	methodMock := classMock.mockMethod(C1::m3).updatesParameters(123);
+	methodMock := classMock.mockMethod(C1::m3).updatesParameters("integer", 123);
+	
+epilog
+	delete classMock;
+end;
+}
+test_updatesParameters_invalid_name
+{
+test_updatesParameters_invalid_name() unitTest;
+
+//	try to mock a parameter with an invalid name
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m3).updatesParameters("INTEGER", 123);
+	
+epilog
+	delete classMock;
+end;
+}
+test_updatesParameters_invalid_type
+{
+test_updatesParameters_invalid_type() unitTest;
+
+//	try to mock a parameter with an invalid type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m3).updatesParameters("integer", 123.456);
 	
 epilog
 	delete classMock;
@@ -3364,7 +3407,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(123, "foobar");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters("integer", 123, "string", "foobar");
 	mockedObject.m1(integer, string);
 	assertEquals(123, integer);
 	assertEquals("foobar", string);
@@ -3397,7 +3440,7 @@ begin
 	mockedObject := classMock.instantiateMockedObject().C1;
 	assertTrue(mockedObject <> null);
 	assertTrue(app.isValidObject(mockedObject));
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(123, "foobar").returns("foobar");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters("integer", 123, "string", "foobar").returns("foobar");
 	result := mockedObject.m1(integer, string);
 	assertEquals(123, integer);
 	assertEquals("foobar", string);
@@ -3423,7 +3466,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(1, "abc").updatesParameters(2, "def").updatesParameters(3, "ghi");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters("integer", 1, "string", "abc").updatesParameters("integer", 2, "string", "def").updatesParameters("integer", 3, "string", "ghi");
 	mockedObject.m1(integer, string);
 	assertEquals(1, integer);
 	assertEquals("abc", string);
@@ -3438,27 +3481,6 @@ begin
 	mockedObject.m1(integer, string);
 	assertEquals(-1, integer);
 	assertEquals("", string);	// usage output parameter set to null in C1::m1()
-	
-epilog
-	delete classMock;
-end;
-}
-test_updatesParameters_wrong_type
-{
-test_updatesParameters_wrong_type() unitTest;
-
-//	test mocking usage input parameters
-
-vars
-	classMock				: JadeClassMock;
-	mockedObject			: C1;
-	methodMock				: JadeMethodMock;
-
-begin
-	classMock := mockManager.createClassMock(C1);
-	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(MockError_MockParameterValidationFailed);
-	methodMock := classMock.mockMethod(C1::m3).updatesParameters(123, 456);
 	
 epilog
 	delete classMock;
@@ -3746,7 +3768,7 @@ vars
 
 begin
 	classMock := mockManager.createClassMock(C1).mockAllInstances(JadeClassMock.MockClassInstancesLifetime_Transient);
-	methodMock := classMock.mockMethod(C1::m2).updatesParameters(99, "ABC").returns("BAR");
+	methodMock := classMock.mockMethod(C1::m2).updatesParameters("integer", 99, "string", "ABC").returns("BAR");
 	beginTransaction;
 	c1Persistent := create C1() persistent;
 	commitTransaction;
@@ -3796,8 +3818,8 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1).mockAllInstances(JadeClassMock.MockClassInstancesLifetime_Transient);
 	methodMock := classMock.mockMethod(C1::m2);
-	methodMock.updatesParameters(99, "ABC").returns("BAR");	// first call
-	methodMock.updatesParameters(55, "AbC").returns("bAr");	// second call
+	methodMock.updatesParameters("integer", 99, "string", "ABC").returns("BAR");	// first call
+	methodMock.updatesParameters("integer", 55, "string", "AbC").returns("bAr");	// second call
 	c1a := create C1() transient;
 	c1b := create C1() transient;
 	integer := 1;
