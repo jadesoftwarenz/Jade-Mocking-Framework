@@ -17,7 +17,7 @@ Default values can also be specified for usage IO or output parameters and the r
 The method mock can be queried the return the call history, call counts, parameter values received, etc. 
 Specific actions to be performed when the method mock is called can be specified, for example to update properties. 
 A  method mock is not restricted to the implementation provided by the framework.
-An instance of any class that implements the *JadeMethodMockIF* interface can be used to mock methods.
+An instance of any class that implements the **JadeMethodMockIF** interface can be used to mock methods.
 
 Support for mocking interfaces is also provided.
 The framework can create instances that mock an interface.
@@ -108,7 +108,7 @@ The **JadeMockManager** instance is used to create a **JadeInterfaceMock** insta
 When a **JadeInterfaceMock** instance is created method mocks are set up for all the methods defined in the interface.
 The **JadeInterfaceMock** instance is a transient instance that can be used wherever an instance of the interface being mocked is required.
 
-When the **JadeClassMock** instance is deleted all **JadeMethodMock** instances for the class are also deleted.
+When the **JadeInterfaceMock** instance is deleted all **JadeMethodMock** instances for the interface are also deleted.
 Any interface mock instances that were instantiated by the instance are also deleted.
 
 ## Creating a JadeMethodMock
@@ -247,22 +247,43 @@ The **ApplicationMock** mock class is defined and implements the **JadeMethodMoc
 The method *myMethodMock* of the **ApplicationMock** class is mapped to the *methodMock* method of the **JadeMethodMockIF**.
 
 ```
-    ApplicationMock::myMethodMock(mockedMethod : Method; receiver : Object input; parameters : ParamListType io) : Any;
+    myMethodMock(mockedMethod : Method; receiver : Object input; parameters : ParamListType io) : Any;
+    
+    begin
+    	write "We made a mockery of that message box!";
+    	return MsgBox_Return_OK;
+    end;
 ```
 
 The *whenCalledInvoke* method of the method mock is used to replace the default method mock with the method *myMethodMock* of the **ApplicationMock** class.
 
 ```
-    // create an instance of a class that implements the JadeMockMethodIF interface.
-    // the mocked method call will be redirected to this instance
-    applicationMock := create ApplicationMock(self) transient;
-
-    // inject app to receive mocked methods
-    classMock.injectMockedObject(app);
-
-    // mock the RootSchema::Application::msgBox() method
-    methodMock_msgBox := classMock.mockMethod(Application::msgBox).whenCalledInvoke(appContext, applicationMock);
-
+    msgBoxMockingExample() unitTest;
+    
+    vars
+    	applicationMock : ApplicationMock;
+    	classMock : JadeClassMock;
+    	mockManager : JadeMockManager;
+    	methodMock : JadeMethodMock;
+    begin
+    	mockManager := create JadeMockManager() transient;
+    	classMock := create JadeClassMock(mockManager, Application) transient;
+    	
+    	// inject app to receive mocked methods
+    	classMock.injectMockedObject(app);
+    
+    	// create an instance of a class that implements the JadeMockMethodIF interface.
+    	// the mocked method call will be redirected to this instance
+    	applicationMock := create ApplicationMock() transient;
+    	
+    	// mock the RootSchema::Application::msgBox() method
+    	methodMock := classMock.mockMethod(Application::msgBox).whenCalledInvoke(appContext, applicationMock);
+    
+    	assertEquals(MsgBox_Return_OK, app.msgBox("foo", "bar", MsgBox_Abort_Retry_Ignore));
+    epilog
+    	delete mockManager;
+    	delete applicationMock;
+    end;
 ```
 
 ## Querying a JadeMethodMock
