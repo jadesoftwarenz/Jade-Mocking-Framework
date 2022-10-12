@@ -1,10 +1,13 @@
-﻿jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "22.0.00";
 schemaDefinition
 JadeMockSchema subschemaOf RootSchema completeDefinition;
 constantDefinitions
 	categoryDefinition JadeMockExceptions
 		documentationText
 		`Exception codes for the Jade Mock Framework.`
+		MockError_MethodMockAlreadyCalled:Integer = 10001;
+		documentationText
+		`Method mock has already been called.`
 		MockError_MockParameterValidationFailed:Integer = 10000;
 		documentationText
 		`Parameter validation failed. The errorText property contains more information.`
@@ -811,6 +814,10 @@ begin
 	if zMockedReturnValues.size() <> 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed return value has already been specified");
 	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
+	endif;
 
 	zReturns(returnValue);
 	
@@ -837,6 +844,10 @@ begin
 	// validation - parameter values already specified
 	if zMockedParameterValues.size() <> 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed parameter values have already been specified");
+	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
 	endif;
 	
 	zUpdatesParameters(values);
@@ -866,6 +877,10 @@ begin
 	// validation - properties already specified
 	if zMockedProperties.size() <> 0 then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed parameter values have already been specified");
+	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
 	endif;
 	
 	zUpdatesProperties(propertiesAndValues);
@@ -1027,6 +1042,10 @@ begin
 	if zAlwaysReturnsSameValue then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed return value has already been specified");
 	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
+	endif;
 
 	zReturns(returnValue);
 
@@ -1053,6 +1072,10 @@ begin
 	// validation - fixed parameter values already specified
 	if zAlwaysUpdatesParametersSameValues then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed parameter values have already been specified");
+	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
 	endif;
 	
 	zUpdatesParameters(values);
@@ -1082,6 +1105,10 @@ begin
 	// validation - properties to udpate have already specified
 	if zAlwaysUpdatesPropertiesSameValues then
 		SystemException.raise_(MockError_MockParameterValidationFailed, "Fixed parameter values have already been specified");
+	endif;
+	// validation - make sure the method mock has not already been called
+	if zMockCallHistories.size() <> 0 then
+		SystemException.raise_(MockError_MethodMockAlreadyCalled, "Method mock has already been called");
 	endif;
 
 	zUpdatesProperties(propertiesAndValues);

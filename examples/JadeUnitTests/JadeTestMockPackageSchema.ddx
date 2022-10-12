@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<schema name="JadeTestMockPackageSchema" JadeVersionNumber="99.0.00" CompleteDefinition="true">
+<schema name="JadeTestMockPackageSchema" JadeVersionNumber="22.0.00" CompleteDefinition="true">
 	<Application name="JadeTestMockPackageSchema">
 		<__overridePatchNumber>0</__overridePatchNumber>
 		<__patchControlString/>

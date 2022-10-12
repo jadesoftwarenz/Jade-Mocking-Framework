@@ -1,4 +1,4 @@
-﻿jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "22.0.00";
 schemaDefinition
 JadeTestMockSchema subschemaOf JadeMockSchema completeDefinition;
 importedPackageDefinitions
@@ -149,6 +149,7 @@ typeDefinitions
 			receiver: Object input; 
 			parameters: ParamListType io): Any;
 		test_alwaysReturns() unitTest;
+		test_alwaysReturns_already_called() unitTest;
 		test_alwaysReturns_no_return() unitTest;
 		test_alwaysReturns_subobject() unitTest;
 		test_alwaysReturns_wrong_type() unitTest;
@@ -158,8 +159,9 @@ typeDefinitions
 	Test_alwaysUpdatesParameters completeDefinition
 	(
 	jadeMethodDefinitions
-		test_alwaysUpdatsesParameters() unitTest;
-		test_alwaysUpdatsesParameters_subobject() unitTest;
+		test_alwaysUpdatesParameters() unitTest;
+		test_alwaysUpdatesParameters_already_called() unitTest;
+		test_alwaysUpdatesParameters_subobject() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -361,6 +363,7 @@ typeDefinitions
 	(
 	jadeMethodDefinitions
 		test_returns() unitTest;
+		test_returns_already_called() unitTest;
 		test_returns_no_return() unitTest;
 		test_returns_wrong_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
@@ -369,6 +372,7 @@ typeDefinitions
 	Test_updatesParameters completeDefinition
 	(
 	jadeMethodDefinitions
+		test_updatesParameters_already_called() unitTest;
 		test_updatesParameters_input() unitTest;
 		test_updatesParameters_io() unitTest;
 		test_updatesParameters_io_and_return() unitTest;
@@ -381,6 +385,7 @@ typeDefinitions
 	(
 	jadeMethodDefinitions
 		test_updatesProperties() unitTest;
+		test_updatesProperties_already_called() unitTest;
 		test_updatesProperties_invalid_parameter_list() unitTest;
 		test_updatesProperties_invalid_parameter_list_bad_type() unitTest;
 		test_updatesProperties_multiple_properties() unitTest;
@@ -683,6 +688,29 @@ epilog
 	delete classMock;
 end;
 }
+test_alwaysReturns_already_called
+{
+test_alwaysReturns_already_called() unitTest;
+
+//	set the value to always return for a method mock that has already been called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m3);
+	mockedObject.m3(123);
+	expectedException(MockError_MethodMockAlreadyCalled);
+	methodMock.alwaysReturns(456);
+	
+epilog
+	delete classMock;
+end;
+}
 test_alwaysReturns_no_return
 {
 test_alwaysReturns_no_return() unitTest;
@@ -771,9 +799,9 @@ end;
 	)
 	Test_alwaysUpdatesParameters (
 	jadeMethodSources
-test_alwaysUpdatsesParameters
+test_alwaysUpdatesParameters
 {
-test_alwaysUpdatsesParameters() unitTest;
+test_alwaysUpdatesParameters() unitTest;
 
 //	set the updating parametes for a method mock using a value of the correct type - call the method multiple times
 
@@ -809,9 +837,37 @@ epilog
 	delete classMock;
 end;
 }
-test_alwaysUpdatsesParameters_subobject
+test_alwaysUpdatesParameters_already_called
 {
-test_alwaysUpdatsesParameters_subobject() unitTest;
+test_alwaysUpdatesParameters_already_called() unitTest;
+
+//	set the parameters to always update for a method mock that has already been called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	integer 				: Integer;
+	string 					: String;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m1);
+	integer := 123;
+	string := "hello world";
+	result := mockedObject.m1(integer, string);
+	expectedException(MockError_MethodMockAlreadyCalled);
+	methodMock.alwaysUpdatesParameters(123, "foobar");
+	
+epilog
+	delete classMock;
+end;
+}
+test_alwaysUpdatesParameters_subobject
+{
+test_alwaysUpdatesParameters_subobject() unitTest;
 
 //	set the updating parametes for a method mock to a subobject (exclusive collection) - call the method multiple times
 
@@ -1613,6 +1669,7 @@ test_injectMockedObject_inject_duplicate_object() unitTest;
 
 vars
 	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
 	c1						: C1;
 
 begin
@@ -1636,6 +1693,7 @@ test_injectMockedObject_inject_instantiated_object() unitTest;
 vars
 	classMock				: JadeClassMock;
 	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
 
 begin
 	classMock := mockManager.createClassMock(C1);
@@ -3157,6 +3215,29 @@ epilog
 	delete classMock;
 end;
 }
+test_returns_already_called
+{
+test_returns_already_called() unitTest;
+
+//	set the value to return for a method mock that has already been called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m3);
+	mockedObject.m3(123);
+	expectedException(MockError_MethodMockAlreadyCalled);
+	methodMock.returns(456);
+	
+epilog
+	delete classMock;
+end;
+}
 test_returns_no_return
 {
 test_returns_no_return() unitTest;
@@ -3218,6 +3299,34 @@ end;
 	)
 	Test_updatesParameters (
 	jadeMethodSources
+test_updatesParameters_already_called
+{
+test_updatesParameters_already_called() unitTest;
+
+//	set the parameters to update for a method mock that has already been called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	integer 				: Integer;
+	string 					: String;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m1);
+	integer := 123;
+	string := "hello world";
+	result := mockedObject.m1(integer, string);
+	expectedException(MockError_MethodMockAlreadyCalled);
+	methodMock.updatesParameters(123, "foobar");
+	
+epilog
+	delete classMock;
+end;
+}
 test_updatesParameters_input
 {
 test_updatesParameters_input() unitTest;
@@ -3398,6 +3507,32 @@ begin
 	mockedObject.name := "foo";
 	result := mockedObject.m1(integer, string);
 	assertEquals("foo", mockedObject.name);
+	
+epilog
+	delete classMock;
+end;
+}
+test_updatesProperties_already_called
+{
+test_updatesProperties_already_called() unitTest;
+
+//	set the parameters to update for a method mock that has already been called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	integer					: Integer;
+	string					: String;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m3);
+	mockedObject.m3(123);
+	expectedException(MockError_MethodMockAlreadyCalled);
+	methodMock.updatesProperties(C1::name, "name");
 	
 epilog
 	delete classMock;
