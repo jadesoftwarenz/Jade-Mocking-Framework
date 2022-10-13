@@ -1014,7 +1014,7 @@ getCallHistory(callIndex : Integer; receiver : Any output; parameters : JadeMock
 begin
 	// validation - call index must be valid
 	if callIndex < 1 or callIndex > zMockCallHistories.size() then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Invalid call level");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Invalid call level");
 	endif;
 	
 	receiver := zMockCallHistories[ callIndex ].JadeMockCallHistory.getReceiver();
@@ -1395,7 +1395,7 @@ vars
 begin
 	// validation - action already defined
 	if zMyMethodToAction <> null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Action already specified");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Action already specified");
 	endif;
 
 	// construct a unique name for the method
@@ -1426,7 +1426,7 @@ begin
 
 	// error handling 
 	if errorCode <> 0 or zMyMethodToAction = null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Error " & errorCode.String & " compiling action - " & app.getMessageText(errorCode));
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Error " & errorCode.String & " compiling action - " & app.getMessageText(errorCode));
 	endif;
 	
 	return self;
@@ -1452,11 +1452,11 @@ whenCalledInvoke(targetContext : ApplicationContext; mockMethodIF : JadeMethodMo
 begin
 	// validation - can not combine with fixed return value
 	if zMockedReturnValues.size() <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked return value has been specified");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked return value has been specified");
 	endif;
 	// validation - can not combine with updating parameters
 	if zMockedParameters.size() <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked parameter values have been specified");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked parameter values have been specified");
 	endif;
 	
 	zMethodMockIF := mockMethodIF;
@@ -1677,22 +1677,22 @@ vars
 begin
 	// validation - method must have a return value
 	if zMockedMethod.returnType = null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked method does not have a return value");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked method does not have a return value");
 	endif;
 	// validation - user defined method to invoke already specified
 	if zMethodMockIF <> self then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Another method mock is defined");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Another method mock is defined");
 	endif;
 	returnValueType := returnValue.getType();
 	returnType := zMockedMethod.returnType.type;
 	// validation - the type of the value must be of the return type
 	if returnType.isKindOf(PrimType) then
 		if returnType <> Any and returnValueType <> returnType then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of value differs to the type of the method return value");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of value differs to the type of the method return value");
 		endif;
 	elseif returnType.isKindOf(Class) then
 		if not returnValueType.isKindOf(returnType.Class) then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of value differs to the type of the method return value");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of value differs to the type of the method return value");
 		endif;
 	endif;
 
@@ -1732,15 +1732,15 @@ vars
 begin
 	// validation - method must have parameters
 	if zMockedMethod.getParameters().size() = 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked method does not have parameters");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked method does not have parameters");
 	endif;
 	// validation - must be given a list of pair of parameter names and values
 	if app.getParamListTypeLength(parameterNamesAndValues) = 0 or app.getParamListTypeLength(parameterNamesAndValues) mod 2 <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Invalid parameter name and value pairs");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Invalid parameter name and value pairs");
 	endif;
 	// validation - user defined method to invoke already specified
 	if zMethodMockIF <> self then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Another method mock is defined");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Another method mock is defined");
 	endif;
 
 	mockParameters := create JadeMockParameters() transient;
@@ -1753,21 +1753,21 @@ begin
 		parameter := zMockedMethod.getParameter(parameterName, parameterIndex);
 		// validation - parameter must exist
 		if parameter = null then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Parameter " & parameterName & " is not defined");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Parameter " & parameterName & " is not defined");
 		endif;
 		parameterType := parameter.type; 
 		// validation - parameter must be usage io or output
 		if parameter.usage <> Parameter.Usage_IO and parameter.usage <> Parameter.Usage_Output then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Parameter " & i.String & " is not be usage io or output");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Parameter " & i.String & " is not be usage io or output");
 		endif;
 		// validation - value must be of the correct type
 		if parameterType.isKindOf(PrimType) then
 			if parameterType <> Any and parameterType <> valueType then
-				SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of parameter value " & i.String & " differs to the type of the method parameter");
+				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of parameter value " & i.String & " differs to the type of the method parameter");
 			endif;
 		elseif parameterType.isKindOf(Class) then
 			if not valueType.isKindOf(parameterType.Class) then
-				SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of parameter value " & i.String & " differs to the type of the method parameter");
+				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of parameter value " & i.String & " differs to the type of the method parameter");
 			endif;
 		endif;
 
@@ -1806,11 +1806,11 @@ vars
 begin
 	// validation - user defined method to invoke already specified
 	if zMethodMockIF <> self then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Another method mock is defined");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Another method mock is defined");
 	endif;
 	// validation - must be given a list of pair of properties and values
 	if app.getParamListTypeLength(propertiesAndValues) = 0 or app.getParamListTypeLength(propertiesAndValues) mod 2 <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Invalid property and value pairs");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Invalid property and value pairs");
 	endif;
 
 	mockProperties := create JadeMockProperties() transient;
@@ -1821,16 +1821,16 @@ begin
 		value := app.getParamListTypeEntry(i + 1, propertiesAndValues);
 		// validation - property must be defined on a class that inherits from the receiving class
 		if not property.schemaType.inheritsFrom(zMock.getMockedType()) then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Property " & i.String & " is not defined on a class that inherits from the receiving class");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Property " & i.String & " is not defined on a class that inherits from the receiving class");
 		endif;
 		// validation - value must be of the correct type
 		if property.type.isKindOf(PrimType) then
 			if property.type <> value.getType() then
-				SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of property " & i.String & " differs to the type of the value");
+				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of property " & i.String & " differs to the type of the value");
 			endif;
 		elseif property.type.isKindOf(Class) then
 			if not value.getType().isKindOf(property.type.Class) then
-				SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Type of property " & i.String & " differs to the type of the value");
+				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of property " & i.String & " differs to the type of the value");
 			endif;
 		endif;
 		
@@ -1967,7 +1967,7 @@ clearAllMethodMocks();
 begin
 	// validation - no methods mocked
 	if zMethodMocks.size() = 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "No method mocks defined");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "No method mocks defined");
 	endif;
 
 	zMethodMocks.purge();
@@ -2044,7 +2044,7 @@ vars
 begin
 	// remove the instance from the collection of mocked instances that have been created
 	if not zMockedObjects.tryRemove(mockedObject) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object has not been instantiated");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object has not been instantiated");
 	endif;
 	
 	// now delete the instance
@@ -2076,11 +2076,11 @@ vars
 begin
 	// validation - null is not allowed
 	if mockedObject = null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected is null");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected is null");
 	endif;
 	// validation - object being injected must be a subclass of the mock class
 	if not mockedObject.isKindOf(zMockedType.Class) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Class of object being injected is invalid");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Class of object being injected is invalid");
 	endif;
 	// validation - all instances not selected
 	if zInstancesLifetime <> MockClassInstancesLifetime_NotSpecified then
@@ -2088,16 +2088,16 @@ begin
 						 (isObjectTransient(mockedObject) and zInstancesLifetime.bitAnd(MockClassInstancesLifetime_Transient) <> 0) or
 						 (isObjectSharedTransient(mockedObject) and zInstancesLifetime.bitAnd(MockClassInstancesLifetime_SharedTransient) <> 0);
 		if not validLifetime then
-			SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "All instances of the Class are mocked");
+			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "All instances of the Class are mocked");
 		endif;
 	endif;
 	// validation - disallow injecting a locally instantiated object
 	if zMockedObjects.includes(mockedObject) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected is already mocked");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected is already mocked");
 	endif;
 	// validation - disallow injecting a object already injected
 	if zInjectedMockedObjects.includes(zNormaliseValue(mockedObject).String) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected has already been injected");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected has already been injected");
 	endif;
 
 	// save the oid of the injected object as a string to allow for subobjects (exclusive collections)
@@ -2134,19 +2134,19 @@ vars
 begin
 	// validation - mocked class not defined or mocked object already instantiated
 	if zMockedType = null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked class not defined");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked class not defined");
 	endif;
 	// validation - all class instances not selected
 	if zInstancesLifetime <> MockClassInstancesLifetime_NotSpecified then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "All instances of the class are being mocked");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "All instances of the class are being mocked");
 	endif;
 	// validation - class cannot be abstract
 	if zMockedType.abstract then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked class is abstract");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked class is abstract");
 	endif;
 	// validation - instantiation of collections is not allowed - the collection blocks must be deleted by the destructor
 	if zMockedType.inheritsFrom(Collection) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked class is a Collection");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked class is a Collection");
 	endif;
 	
 	// create the instance
@@ -2203,15 +2203,15 @@ mockAllInstances(lifetime : Integer) : JadeClassMock updating;
 begin
 	// validation - no mocked objects can be instantiated
 	if zMockedObjects.size() <> 0 and zInjectedMockedObjects.size() <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Mocked instances are already specified");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Mocked instances are already specified");
 	endif;
 	// validation - lifetime already specified
 	if zInstancesLifetime.bitAnd(lifetime) <> 0 then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Class lifetime has already been specified");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Class lifetime has already been specified");
 	endif;
 	// validation - ensure valid lifetime 
 	if lifetime <> MockClassInstancesLifetime_Persistent and lifetime <> MockClassInstancesLifetime_Transient and lifetime <> MockClassInstancesLifetime_SharedTransient then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Invalid class instance lifetime");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Invalid class instance lifetime");
 	endif;
 
 	zInstancesLifetime := zInstancesLifetime.bitOr(lifetime);
@@ -2243,7 +2243,7 @@ vars
 begin
 	// validation - no mocked objects can be instantiated
 	if not zMockedType.inheritsFrom(topClass) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "topClass is not related to the class being mocked");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "topClass is not related to the class being mocked");
 	endif;
 
 	// get all the necessary classes
@@ -2324,15 +2324,15 @@ vars
 begin
 	// validation - method must be on the class being mocked 
 	if method.schemaType.isKindOf(zMockedType.Class) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Method is not defined on the class being mocked");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Method is not defined on the class being mocked");
 	endif;
 	// validation - method cannot be a constructor or destructor
 	if meth.isConstructor() or meth.isDestructor() then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Cannot mock a constructor or destructor");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Cannot mock a constructor or destructor");
 	endif;
 	// validation - method cannot be systemOnly
 	if meth.__systemOnly() then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Cannot mock a systemOnly method");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Cannot mock a systemOnly method");
 	endif;
 
 	methodMock := create JadeMethodMock(self, meth) transient;
@@ -2598,19 +2598,19 @@ injectMockedObject(mockedInterfaceObject : JadeInterfaceMock) : JadeInterfaceMoc
 begin
 	// validation - null is not allowed
 	if mockedInterfaceObject = null then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected is null");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected is null");
 	endif;
 	// validation - object being injected must be a mocked interface instance
 	if not mockedInterfaceObject.isKindOf(JadeInterfaceMock) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Class of object being injected is invalid");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Class of object being injected is invalid");
 	endif;
 	// validation - disallow injecting a locally instantiated object
 	if mockedInterfaceObject = self then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected is already mocked");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected is already mocked");
 	endif;
 	// validation - disallow injecting a object already injected
 	if zInjectedMockedObjects.includes(zNormaliseValue(mockedInterfaceObject).String) then
-		SystemException.raise_(JadeMockingFramework.MockError_MethodMockAlreadyCalled, "Object being injected has already been injected");
+		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Object being injected has already been injected");
 	endif;
 
 	// save the oid of the injected object as a string to allow for subobjects (exclusive collections)

@@ -726,7 +726,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m6).alwaysReturns(123);
 	
 epilog
@@ -774,7 +774,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m2).alwaysReturns(123);
 	
 epilog
@@ -1458,7 +1458,7 @@ begin
 	mockedObject.callM1(3);
 	
 	parameters := create JadeMockAnyArray() transient;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock.getCallHistory(0, receiver, parameters);
 		
 epilog
@@ -1486,7 +1486,7 @@ begin
 	methodMock := classMock.mockMethod(C1::m2);
 	
 	parameters := create JadeMockAnyArray() transient;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock.getCallHistory(0, receiver, parameters);
 		
 epilog
@@ -1677,7 +1677,7 @@ begin
 	classMock := mockManager.createClassMock(C1);
 	c1 := create C1() transient;
 	classMock.injectMockedObject(c1);
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	classMock.injectMockedObject(c1);
 
 epilog
@@ -1699,7 +1699,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	classMock.injectMockedObject(mockedObject);
 
 epilog
@@ -1758,7 +1758,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	c2 := create C2() transient;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	classMock.injectMockedObject(c2);
 	
 epilog
@@ -1828,7 +1828,7 @@ vars
 
 begin
 	classMock := mockManager.createClassMock(AbstractClass);
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
  	mockedObject := classMock.instantiateMockedObject().AbstractClass;
 	
 epilog
@@ -1849,7 +1849,7 @@ vars
 
 begin
 	classMock := mockManager.createClassMock(ObjectSet);
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
  	mockedObject := classMock.instantiateMockedObject().ObjectSet;
 	
 epilog
@@ -2249,7 +2249,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1Sub);
 	mockedObject := classMock.instantiateMockedObject().C1Sub;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	classMock.mockAllMethodsUpToClass(C2);
 
 epilog
@@ -2471,7 +2471,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::create);
 	
 epilog
@@ -2520,7 +2520,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::delete);
 	
 epilog
@@ -3253,7 +3253,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m6).returns(123);
 	
 epilog
@@ -3274,7 +3274,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m2).returns(123);
 	
 epilog
@@ -3342,7 +3342,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m3).updatesParameters("integer", 123);
 	
 epilog
@@ -3363,7 +3363,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m3).updatesParameters("INTEGER", 123);
 	
 epilog
@@ -3384,7 +3384,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m3).updatesParameters("integer", 123.456);
 	
 epilog
@@ -3574,7 +3574,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C1::name, 123, C1::string);
 	
 epilog
@@ -3705,7 +3705,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C2::integer, 123);
 	
 epilog
@@ -3726,7 +3726,7 @@ vars
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MethodMockAlreadyCalled);
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
 	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C1::name, 123);
 	
 epilog
