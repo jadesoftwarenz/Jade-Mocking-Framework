@@ -331,6 +331,7 @@ typeDefinitions
 		test_mockMethod_mapping_method() unitTest;
 		test_mockMethod_multiple_calls_different_receiver() unitTest;
 		test_mockMethod_multiple_calls_same_receiver() unitTest;
+		test_mockMethod_no_parameters() unitTest;
 		test_mockMethod_server_method() unitTest;
 		test_mockMethod_subobject() unitTest;
 		test_mockMethod_twice_on_different_instance_with_different_class_mock() unitTest;
@@ -466,6 +467,7 @@ typeDefinitions
 	(
 	jadeMethodDefinitions
 		test_whenCalledDoes_local_variables() unitTest;
+		test_whenCalledDoes_no_parameters() unitTest;
 		test_whenCalledDoes_simple() unitTest;
 		test_whenCalledDoes_with_returns_local_variables() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
@@ -2747,6 +2749,32 @@ epilog
 	delete classMock;
 end;
 }
+test_mockMethod_no_parameters
+{
+test_mockMethod_no_parameters() unitTest;
+
+//	test that mock is called for a mocked method that does not have any parameters
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m6);
+	mockedObject.m6();
+	assertTrue(methodMock.wasReceivedOnceBy(mockedObject));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+
+epilog
+	delete classMock;
+end;
+}
 test_mockMethod_server_method
 {
 test_mockMethod_server_method() unitTest;
@@ -4416,6 +4444,35 @@ begin
 	// check the code was executed
 	assertEquals("updated1", mockedObject.name);
 	assertEquals("", result);
+	
+epilog
+	delete classMock;
+end;
+}
+test_whenCalledDoes_no_parameters
+{
+test_whenCalledDoes_no_parameters() unitTest;
+
+//	test that user-defined code (injected to the mock) is executed when a mocked method with no parametes is called
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+
+	methodMock := classMock.mockMethod(C1::m6).whenCalledDoes("name := 'after';");
+	
+	mockedObject.name := "before";
+
+	mockedObject.m6();
+	
+	// check the code was executed
+	assertEquals("after", mockedObject.name);
 	
 epilog
 	delete classMock;

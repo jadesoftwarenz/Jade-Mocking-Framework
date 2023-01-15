@@ -98,6 +98,9 @@ typeDefinitions
 		zMockedReturnValues:           JadeMockAnyArray protected;
 		documentationText
 		`Values to use to mock the return value.`
+		zParameterCount:               Integer protected;
+		documentationText
+		`Number of parameters to the mocked method.`
 	referenceDefinitions
 		zMethodMockIF:                 JadeMethodMockIF  protected;
 		documentationText
@@ -945,6 +948,7 @@ begin
 	self.zMockedMethod := mockedMethod;
 	self.zAlwaysReturnsSameValue := false;
 	self.zAlwaysUpdatesParametersSameValues := false;
+	self.zParameterCount := mockedMethod.getParameters.size();
 	
 	// by default, this instance implements the method mock that is called when the mocked method is called
 	self.zMethodMockIF := self;
@@ -1513,7 +1517,7 @@ begin
 		else
 			methodToActionReceiver := receiver;
 		endif;
-		if app.getParamListTypeLength(parameters) > 0 then
+		if zParameterCount > 0 then
 			process.executeTransientMethod(zMyMethodToAction, methodToActionReceiver, parameters);
 		else
 			process.executeTransientMethod(zMyMethodToAction, methodToActionReceiver);

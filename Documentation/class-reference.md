@@ -554,6 +554,10 @@ Values to use to mock the return value.
 
 A transient method used to fake out the mocked method.
 
+#### zParameterCount : Integer protected
+
+Number of parameters to the mocked method.
+
 ### Methods 
 
 #### alwaysReturns
