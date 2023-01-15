@@ -24,6 +24,21 @@ Method mocking is enabled for all shared transient instances of this class.
 
 Method mocking is enabled for all transient instances of this class.
 
+### Properties 
+
+#### zInstancesLifetime : Integer protected
+
+Specifies the lifetime of instances that the method calls are mocked.
+The value must be one or more of the following Integer class constants:
+	MockClassInstancesLifetime_None
+	MockClassInstancesLifetime_Persistent
+	MockClassInstancesLifetime_Transient
+	MockClassInstancesLifetime_SharedTransient
+
+#### zMockedObjects : ObjectSet protected
+
+Transient instances of the class being mocked that have been instantiated by this class mock.
+
 ### Methods 
 
 #### clearAllMethodMocks
@@ -47,6 +62,19 @@ Parameters:
 
 - mockManager - the JadeMockManager instance that is creating this class mock.
 -  mockedClass - the class being mocked.
+
+#### delete
+
+Destructor for a class mock.
+
+ Unregisters the method mocks for each method being mocked.
+ Delete any mocked objects that still exist. Destructors are not called.
+ Note: injected mocked instances are not deleted.
+
+ The method mocks collection is purged by way of a parent-child relationship.
+```
+    delete() updating;
+```
 
 #### deleteMockedObject
 
@@ -111,6 +139,22 @@ Parameters:
 Returns: 
 
 Returns true if a mock for the method is registered for the instance, or false if it is not.
+
+#### isObjectInstantiated
+
+Determines if the object specified has been instantiated by the JadeClassMock.
+
+```
+    isObjectInstantiated(object : Object) : Boolean;
+```
+
+Parameters: 
+
+- object - the instance.
+
+Returns: 
+
+Returns true if the object specified has been instantiated by the JadeClassMock, or false if it is not.
 
 #### mockAllInstances
 
@@ -179,6 +223,120 @@ Returns:
 
 The method mock instance.
 
+#### zInstantiateMockedObject
+
+Instantiate a transient instance of the class being mocked. Constructors are not called.
+
+```
+    zInstantiateMockedObject(mockedClass : Class) : Object protected;
+```
+
+Parameters: 
+
+- mockedClass - the Class of the instance to create.
+
+Returns: 
+
+The instantiated instance.
+
+#### zRegisterMethodMockForClassInstances
+
+Register a method mock for the method for all instances of the class with the given lifetimes.
+
+```
+    zRegisterMethodMockForClassInstances(classNumber : Integer; lifetime : Integer; mockedMethod : Method; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- classNumber - the number of Class for which method calls are to be mocked.
+-  lifetime - specifies the lifetime of instances that the method calls are mocked.
+-  mockedMethod - the method to mock.
+-  methodMock - the method mock for the method being mocked.
+
+ The value of the lifetime parameter must be the sum of one or more of the following Integer JadeClassMock class constants:
+ - MockClassInstancesLifetime_Persistent
+ - MockClassInstancesLifetime_Transient
+ - MockClassInstancesLifetime_SharedTransient
+
+#### zRegisterMethodMockForInstance
+
+Register a method mock for the method for the specified instance.
+
+```
+    zRegisterMethodMockForInstance(mockedObject : Object; mockedMethod : Method; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance for which method calls are to be mocked.
+-  mockedMethod - the method to mock.
+-  methodMock - the method mock for the method being mocked.
+
+#### zRegisterMethodMocks
+
+Register the method mock for all instances mocking this class.
+
+ The method mock is registered for either all instantiated and injected instances
+ of all instances of the class with the previously specified lifetimes.
+
+```
+    zRegisterMethodMocks(methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- methodMock - the method mock to register.
+
+#### zUnregisterMethodMockForClassInstances
+
+Unregister the method mock for the method for all instances of the class with the given lifetimes.
+
+```
+    zUnregisterMethodMockForClassInstances(classNumber : Integer; lifetime : Integer; mockedMethod : Method; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- classNumber - the number of Class for which method calls are to being mocked.
+-  lifetime - specifies the lifetime of instances that the method calls are mocked.
+-  mockedMethod - the method being mocked.
+-  methodMock - the method mock for the method being mocked.
+
+ The value of the lifetime parameter must be the sum of one or more of the following Integer JadeClassMock class constants:
+ - MockClassInstancesLifetime_Persistent
+ - MockClassInstancesLifetime_Transient
+ - MockClassInstancesLifetime_SharedTransient
+
+#### zUnregisterMethodMockForInstance
+
+Unregister the method mock for the method for the specified instance.
+
+```
+    zUnregisterMethodMockForInstance(mockedObject : Object; mockedMethod : Method; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance for which method calls are being mocked.
+-  mockedMethod - the method being mocked.
+-  methodMock - the method mock for the method being mocked.
+
+#### zUnregisterMethodMocks
+
+Unregister the method mock for all instances mocking this class.
+
+ The method mock is unregistered for either all instantiated and injected instances
+ of all instances of the class with the previously specified lifetimes.
+
+```
+    zUnregisterMethodMocks(methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- methodMock - the method mock to unregister.
+
 ## Class JadeInterfaceMock
 
 Inherits from JadeMock. For an interface mock, the instance is the mocked interface, requests are forwarded to this object, mocking methods as required. The instance is instantiated by the user. Instances of any other class that implements the interface can be injected by the user.
@@ -199,6 +357,17 @@ Parameters:
 
 - mockManager - the JadeMockManager instance that is creating this interface mock.
 -  mockedInterface - the interface being mocked.
+
+#### delete
+
+Destructor for an interface mock.
+
+ Unregisters the method mocks for each interface method, including all superinterfaces.
+
+ The method mocks collection is purged by way of a parent-child relationship.
+```
+    delete() updating;
+```
 
 #### injectMockedObject
 
@@ -252,9 +421,138 @@ Returns:
 
 Returns true if an interface mock is registered for the instance, or false if it is not.
 
+#### zRegisterInterfaceMethodMock
+
+Register a mock for the interface method for the specified instance.
+
+```
+    zRegisterInterfaceMethodMock(mockedObject : Object; mockedMethod : JadeInterfaceMethod; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance that mocks the interface.
+-  mockedMethod - the interface method being mocked.
+-  methodMock - the method mock that mocks this interface method.
+
+#### zRegisterInterfaceMethodMocks
+
+Registers method mocks for each interface method, including all superinterfaces.
+
+```
+    zRegisterInterfaceMethodMocks(mockedInterfaceObject : JadeInterfaceMock) updating, protected;
+```
+
+Parameters: 
+
+- mockedObject - the mocked interface instance for which method calls are to be mocked.
+
+#### zRegisterInterfaceMock
+
+Register an interface mock for the specified instance.
+
+```
+    zRegisterInterfaceMock(mockedObject : Object; mockedInterface : JadeInterface) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance that mocks the interface.
+-  mockedInterface - the interface being mocked.
+
+#### zUnregisterInterfaceMethodMock
+
+Unregister the mock for the interface method for the specified instance.
+
+```
+    zUnregisterInterfaceMethodMock(mockedObject : Object; mockedMethod : JadeInterfaceMethod; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance that mocks the interface.
+-  mockedMethod - the interface method being mocked.
+-  methodMock - the method mock that mocks this interface method.
+
+#### zUnregisterInterfaceMethodMocks
+
+Unregisters the method mocks for each interface method, including all superinterfaces.
+
+ The method mocks collection is purged by way of a parent-child relationship.
+```
+    zUnregisterInterfaceMethodMocks() updating, protected;
+```
+
+#### zUnregisterInterfaceMock
+
+Unregister the interface mock for the specified instance.
+
+```
+    zUnregisterInterfaceMock(mockedObject : Object; mockedInterface : JadeInterface) protected;
+```
+
+Parameters: 
+
+- mockedObject - the instance that mocks the interface.
+-  mockedInterface - the interface being mocked.
+
 ## Class JadeMethodMock
 
 Represents a mockery of a single method. This will keep track of the calls to the mocked method. Has methods to mock behaviour and methods useful for validating the calls in testing.
+
+### Properties 
+
+#### zAlwaysReturnsSameValue : Boolean protected
+
+A fixed value has been provided to mock the return value.
+
+#### zAlwaysUpdatesParametersSameValues : Boolean protected
+
+Fixed values have been provided to mock Usage IO or Usage Output parameters.
+
+#### zAlwaysUpdatesPropertiesSameValues : Boolean protected
+
+Fixed values have been specified to mock updates to properties.
+
+#### zMethodMockIF : JadeMethodMockIF protected
+
+The instance that implements the method mock that is called when the mocked method is called.
+
+#### zMock : JadeMock protected
+
+JadeClassMock or JadeInterfaceMock this mock belongs to.
+
+#### zMockCallHistories : ObjectArray protected
+
+History of mocked method calls. In call order.
+
+#### zMockCallHistoriesByReceiver : JadeMockCallHistoriesByReceiverDict protected
+
+History of mocked method calls. In receiver order.
+
+#### zMockedMethod : Method protected
+
+The method that has been mocked.
+
+#### zMockedParameters : ObjectArray protected
+
+Names and values to use to mock Usage IO or Usage Output parameter values.
+
+#### zMockedProperties : ObjectArray protected
+
+Properties and values to use to mock updates to properties.
+
+#### zMockedReturnValueTypes : TypeColl protected
+
+Types of the values to use to mock the return value.
+
+#### zMockedReturnValues : JadeMockAnyArray protected
+
+Values to use to mock the return value.
+
+#### zMyMethodToAction : JadeMethod protected
+
+A transient method used to fake out the mocked method.
 
 ### Methods 
 
@@ -333,6 +631,16 @@ Parameters:
 
 - mock - the class or interface mock creating the method mock.
 -  mockedMethod - the method being mocked.
+
+#### delete
+
+Destructor for a method mock.
+
+ Delete captured data.
+ Unregister the method mock with the Object Manager.
+```
+    delete() updating;
+```
 
 #### getCallCount
 
@@ -611,9 +919,180 @@ Returns:
 
 The method mock instance.
 
+#### zMockMethodCall
+
+Mock a call to a mocked method.
+
+ This method implements the JadeMockSchema::JadeMethodMockIF::methodMock() interface method.
+ This method is called when a method being mocked is called.
+ The receiver and parameters are captured and any IO or Output parameters are updated.
+ Any properties are updated with mocked values.
+ An optional user-defined action is performed.
+ The return value is mocked.
+
+```
+    zMockMethodCall(mockedMethod : Method; receiver : Object input; parameters : ParamListType io) : Any updating, protected;
+```
+
+Parameters: 
+
+- mockedMethod- the method being mocked.
+-  receiver - the receiver of the method call being mocked.
+-  parameters - the parameters to the method call being mocked (I/O).
+
+Returns: 
+
+The mocked return value.
+
+#### zMockParameters
+
+Save the actual parameter values passed to mocked method and update any usage io/output parameters.
+
+```
+    zMockParameters(callHistory : JadeMockCallHistory input; actualParameters : ParamListType io) updating, protected;
+```
+
+Parameters: 
+
+- callHistory - the call history for the method mock.
+-  actualParameters - the actual parameters to the method call being mocked (I/O).
+
+#### zMockProperties
+
+Update any properties with mocked values.
+
+```
+    zMockProperties(receiver : Object input) updating, protected;
+```
+
+Parameters: 
+
+- receiver - the receiver of the mocked method call.
+
+#### zMockReturnValue
+
+Get the return value for the method being mocked.
+
+```
+    zMockReturnValue() : Any updating, protected;
+```
+
+Returns: 
+
+The return value.
+
+#### zRegisterMethodMock
+
+Register the method mock with the Object Manager. 
+
+ The class/interface mock associates each method mock with the instances that are mocking the method.
+
+```
+    zRegisterMethodMock(mockedMethod : Method; methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- mockedMethod - the method being mocked.
+-  methodMock - the method mock.
+
+#### zRegisterMethodMockReceiver
+
+Set the instance that will receive the mock when the mocked method is called.
+
+```
+    zRegisterMethodMockReceiver(targetContext : ApplicationContext; receiver : JadeMethodMockIF) protected;
+```
+
+Parameters: 
+
+- targetContext - the application context in which to call the mock method.
+-  receiver - the method mock receiver.
+
+#### zReturns
+
+Set the value that will be returned when the method mock is called. 
+
+ Common code for the returns() and alwaysReturns() methods.
+
+```
+    zReturns(returnValue : Any) updating, protected;
+```
+
+Parameters: 
+
+- returnValue - the value to return.
+
+#### zUnregisterMethodMock
+
+Unregister the method mock with the Object Manager. 
+
+```
+    zUnregisterMethodMock(methodMock : JadeMethodMock) protected;
+```
+
+Parameters: 
+
+- methodMock - the method mock.
+
+#### zUpdatesParameters
+
+Set the values for usage io/output parameters that will always be returned when the method mock is called.
+
+ Common code for the updatesParameters() and alwaysUpdatesParameters() methods.
+
+```
+    zUpdatesParameters(parameterNamesAndValues : ParamListType) updating, protected;
+```
+
+Parameters: 
+
+- parameterNamesAndValues - variable list of pairs of properties and values:
+ parameterName - the name of the parameter to update.
+-  value - the value to set.
+
+#### zUpdatesProperties
+
+Set the values for properties that will be updated when the method mock is called.
+
+ Common code for the updatesProperties() and alwaysUpdatesProperties() methods.
+
+```
+    zUpdatesProperties(propertiesAndValues : ParamListType) updating, protected;
+```
+
+Parameters: 
+
+- propertiesAndValues - variable list of pairs of properties and values:
+ property - the property to update.
+-  value - the property value to set.
+
+## Class JadeMethodMockDict
+
+Maintains the methods being mocked on the Class or Interface.
+
 ## Class JadeMock
 
 An abstract superclass in the framework schema for class and interface mocks. This class implements behaviour common to classes and interfaces.
+
+### Properties 
+
+#### zInjectedMockedObjects : StringArray protected
+
+The injected instances being mocked.
+Membership is String because Subobject references (exclusive collection) cannot be added to an Array.
+
+#### zMethodMocks : JadeMethodMockDict protected
+
+The method mocks.
+
+#### zMockManager : JadeMockManager protected
+
+The mock manager.
+
+#### zMockedType : Type protected
+
+The class or interface that owns this mock.
 
 ### Methods 
 
@@ -668,11 +1147,135 @@ The class or interface mock instance.
 
 Utility array class for storing values of different types. Object references must be converted to Strings by the caller because exclusive subobject references cannot be added to an Array.
 
+## Class JadeMockCallHistoriesByReceiverDict
+
+Maintains the history of mocked method calls.
+
+## Class JadeMockCallHistory
+
+Represents a recorded history for a single call to a method of a mock. An instance is created when a method being mocked is called. The instance records the time of the call, the receiver and the parameters.
+
+### Properties 
+
+#### zCallTime : TimeStamp protected
+
+The time the mocked method was called.
+
+#### zMockedMethod : Method protected
+
+The method being mocked.
+
+#### zParameters : JadeMockAnyArray protected
+
+The mocked method call parameters.
+
+#### zReceiver : String protected
+
+The mocked method call receiver.
+This property is a String because subobject references (exclusive collection) cannot be added to an Array.
+
+### Methods 
+
+#### addParameterValue
+
+Add the parameter value to the call history.
+
+```
+    addParameterValue(parameterValue : Any) updating;
+```
+
+Parameters: 
+
+- parameterValue - the parameter value.
+
+#### compareParameters
+
+Compare the parameters with a list of values.
+
+```
+    compareParameters(parametersToCheck : JadeMockAnyArray) : Boolean;
+```
+
+Parameters: 
+
+- parametersToCheck - the list of values to check.
+
+Returns: 
+
+Returns true if the parameters match the specified list of values.
+
+#### copyParameters
+
+Copy the parameters to the specified collection.
+
+```
+    copyParameters(parameters : JadeMockAnyArray input);
+```
+
+Parameters: 
+
+- parameters - the collection to copy the parameters to.
+
+#### create
+
+Constructor for a mock method call history.
+
+```
+    create(receiver : Object; mockedMethod : Method) updating;
+```
+
+Parameters: 
+
+- receiver - the receiver of the method call being mocked.
+-  mockedMethod - the method being mocked.
+
+ Save the time the method was called.
+
+#### getMockedMethod
+
+Returns the method being mocked of this JadeMockCallInstance instance.
+
+```
+    getMockedMethod() : Method;
+```
+
+Returns: 
+
+The method being mocked of this JadeMockCallInstance instance.
+
+#### getReceiver
+
+Returns the receiver of this JadeMockCallInstance instance.
+
+```
+    getReceiver() : Object;
+```
+
+Returns: 
+
+The receiver of this JadeMockCallInstance instance.
+
 ## Class JadeMockManager
 
 Class to manage mocking framework classes. The framework requires a transient instance of this class to allow method mocks to be created. Multiple managers are allowed, but a single instance should be enough for any given test suite. The JadeMockManager instance owns the JadeClassMock instances, these instances are deleted when the JadeMockManager instance is deleted.
 
+### Properties 
+
+#### zMocks : ObjectSet protected
+
+Collection of classes and interfaces that are being mocked.
+
 ### Methods 
+
+#### create
+
+Constructor for a mock manager.
+
+ Mock initialisation : fetch the class and feature numbers for the mocking framework classes.
+ Security : check ini file to ensure mocking is allowed.
+```
+    create() updating;
+```
 
 #### createClassMock
 
@@ -706,6 +1309,15 @@ Returns:
 
 The created interface mock instance.
 
+#### delete
+
+Destructor for a mock manager.
+
+ The zMocks collection is purged by way of a parent-child relationship.
+```
+    delete() updating;
+```
+
 #### deleteClassMock
 
 Delete a Class mock.
@@ -729,6 +1341,38 @@ Delete an interface mock.
 Parameters: 
 
 - interfaceMock - the interface mock to delete.
+
+## Class JadeMockParameters
+
+The parameter names and values used to update Usage IO and Usage Output parameters when the method mock is called.
+
+### Properties 
+
+#### parameterIndexes : IntegerArray
+
+The index of the Usage IO or Usage Output parameters to update when the method mock is called.
+
+#### parameterTypes : TypeColl
+
+The type of Usage IO and Usage Output parameters that are updated when the method mock is called.
+
+#### parameterValues : JadeMockAnyArray
+
+The values used to update the Usage IO and Usage Output parameters when the method mock is called.
+
+## Class JadeMockProperties
+
+The properties and values used to update properties when the method mock is called.
+
+### Properties 
+
+#### properties : PropertyColl
+
+The properties to update when the method mock is called.
+
+#### propertyValues : JadeMockAnyArray
+
+The values used to update the properties when the method mock is called.
 
 ## Class JadeMockingFramework
 
@@ -761,4 +1405,42 @@ Parameters:
 Returns: 
 
 Returns true if the object specified has been instantiated by any JadeClassMock, or false if it is not.
+
+#### zNormaliseValue
+
+This method converts an Object reference to a String.
+ This is required in some situations because subobject references (exclusive collection) cannot be added to an Array.
+ 
+ All other data types are returned unchanged.
+
+```
+    zNormaliseValue(any : Any) : Any protected, typeMethod;
+```
+
+Parameters: 
+
+- any - the value to convert.
+
+Returns: 
+
+The normalised value as a String.
+
+#### zUnnormaliseValue
+
+This method converts a String to an Object reference.
+ This is required in some situations because subobject references (exclusive collection) cannot be added to an Array.
+ 
+ It is up to the caller of this method to ensure that the normalised value is an Object reference.
+
+```
+    zUnnormaliseValue(any : Any) : Object protected, typeMethod;
+```
+
+Parameters: 
+
+- any - the value to convert.
+
+Returns: 
+
+The unnormalised value as an Object Reference.
 
