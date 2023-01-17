@@ -1695,7 +1695,7 @@ begin
 			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of value differs to the type of the method return value");
 		endif;
 	elseif returnType.isKindOf(Class) then
-		if not returnValueType.isKindOf(returnType.Class) then
+		if not returnValueType.inheritsFrom(returnType.Class) then
 			SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of value differs to the type of the method return value");
 		endif;
 	endif;
@@ -1770,7 +1770,7 @@ begin
 				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of parameter value " & i.String & " differs to the type of the method parameter");
 			endif;
 		elseif parameterType.isKindOf(Class) then
-			if not valueType.isKindOf(parameterType.Class) then
+			if not valueType.inheritsFrom(parameterType.Class) then
 				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of parameter value " & i.String & " differs to the type of the method parameter");
 			endif;
 		endif;
@@ -1833,7 +1833,7 @@ begin
 				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of property " & i.String & " differs to the type of the value");
 			endif;
 		elseif property.type.isKindOf(Class) then
-			if not value.getType().isKindOf(property.type.Class) then
+			if not value.getType().inheritsFrom(property.type.Class) then
 				SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Type of property " & i.String & " differs to the type of the value");
 			endif;
 		endif;

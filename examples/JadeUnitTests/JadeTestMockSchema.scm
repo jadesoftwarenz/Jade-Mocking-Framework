@@ -150,9 +150,11 @@ typeDefinitions
 			parameters: ParamListType io): Any;
 		test_alwaysReturns() unitTest;
 		test_alwaysReturns_already_called() unitTest;
+		test_alwaysReturns_invalid_object_type() unitTest;
+		test_alwaysReturns_invalid_primitive_type() unitTest;
 		test_alwaysReturns_no_return() unitTest;
 		test_alwaysReturns_subobject() unitTest;
-		test_alwaysReturns_wrong_type() unitTest;
+		test_alwaysReturns_valid_object_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -161,7 +163,11 @@ typeDefinitions
 	jadeMethodDefinitions
 		test_alwaysUpdatesParameters() unitTest;
 		test_alwaysUpdatesParameters_already_called() unitTest;
+		test_alwaysUpdatesParameters_invalid_name() unitTest;
+		test_alwaysUpdatesParameters_invalid_object_type() unitTest;
+		test_alwaysUpdatesParameters_invalid_primitive_type() unitTest;
 		test_alwaysUpdatesParameters_subobject() unitTest;
+		test_alwaysUpdatesParameters_valid_object_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -365,8 +371,10 @@ typeDefinitions
 	jadeMethodDefinitions
 		test_returns() unitTest;
 		test_returns_already_called() unitTest;
+		test_returns_invalid_object_type() unitTest;
+		test_returns_invalid_primitive_type() unitTest;
 		test_returns_no_return() unitTest;
-		test_returns_wrong_type() unitTest;
+		test_returns_valid_object_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -376,10 +384,12 @@ typeDefinitions
 		test_updatesParameters_already_called() unitTest;
 		test_updatesParameters_input() unitTest;
 		test_updatesParameters_invalid_name() unitTest;
-		test_updatesParameters_invalid_type() unitTest;
+		test_updatesParameters_invalid_object_type() unitTest;
+		test_updatesParameters_invalid_primitive_type() unitTest;
 		test_updatesParameters_io() unitTest;
 		test_updatesParameters_io_and_return() unitTest;
 		test_updatesParameters_io_multiple_times() unitTest;
+		test_updatesParameters_valid_object_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -388,13 +398,15 @@ typeDefinitions
 	jadeMethodDefinitions
 		test_updatesProperties() unitTest;
 		test_updatesProperties_already_called() unitTest;
+		test_updatesProperties_invalid_object_type() unitTest;
 		test_updatesProperties_invalid_parameter_list() unitTest;
 		test_updatesProperties_invalid_parameter_list_bad_type() unitTest;
+		test_updatesProperties_invalid_primitive_type() unitTest;
 		test_updatesProperties_multiple_properties() unitTest;
 		test_updatesProperties_multiple_times() unitTest;
 		test_updatesProperties_object_reference() unitTest;
 		test_updatesProperties_property_not_on_mock_class() unitTest;
-		test_updatesProperties_wrong_value_type() unitTest;
+		test_updatesProperties_valid_object_type() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
@@ -505,6 +517,7 @@ typeDefinitions
 		string:                        String[31];
 		strings:                       StringArray;
 	referenceDefinitions
+		c1:                            C1 ;
 		object:                        Object ;
 	jadeMethodDefinitions
 		callM1(i: Integer): String;
@@ -523,6 +536,8 @@ typeDefinitions
 		m4(object: Object): Object;
 		m5(object: Object io): Object;
 		m6();
+		m7(): C1;
+		m8(c1: C1 io);
 		serverMethod(
 			integer: Integer io; 
 			string: String output): String serverExecution;
@@ -714,6 +729,51 @@ epilog
 	delete classMock;
 end;
 }
+test_alwaysReturns_invalid_object_type
+{
+test_alwaysReturns_invalid_object_type() unitTest;
+
+//	set the return value for a method mock using an object value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c2						: C2;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	c2 := create C2() transient;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m7).alwaysReturns(c2);
+	
+epilog
+	delete classMock;
+	delete c2;
+end;
+}
+test_alwaysReturns_invalid_primitive_type
+{
+test_alwaysReturns_invalid_primitive_type() unitTest;
+
+//	set the return value for a method mock using a primitive value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m2).alwaysReturns(123);
+	
+epilog
+	delete classMock;
+end;
+}
 test_alwaysReturns_no_return
 {
 test_alwaysReturns_no_return() unitTest;
@@ -762,25 +822,30 @@ epilog
 	delete classMock;
 end;
 }
-test_alwaysReturns_wrong_type
+test_alwaysReturns_valid_object_type
 {
-test_alwaysReturns_wrong_type() unitTest;
+test_alwaysReturns_valid_object_type() unitTest;
 
-//	set the return value for a method mock using a value of the wrong type
+//	set the return value for a method mock using an object value of the correct type
 
 vars
 	classMock				: JadeClassMock;
 	mockedObject			: C1;
 	methodMock				: JadeMethodMock;
+	c1						: C1;
+	result					: C1;
 
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
-	methodMock := classMock.mockMethod(C1::m2).alwaysReturns(123);
+	c1 := create C1() transient;
+	methodMock := classMock.mockMethod(C1::m7).alwaysReturns(c1);
+	result := mockedObject.m7().C1;
+	assertEquals(c1, result);
 	
 epilog
 	delete classMock;
+	delete c1;
 end;
 }
 unitTestAfterClass
@@ -868,6 +933,72 @@ epilog
 	delete classMock;
 end;
 }
+test_alwaysUpdatesParameters_invalid_name
+{
+test_alwaysUpdatesParameters_invalid_name() unitTest;
+
+//	try to mock a parameter with an invalid name
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m3).alwaysUpdatesParameters("INTEGER", 123);
+	
+epilog
+	delete classMock;
+end;
+}
+test_alwaysUpdatesParameters_invalid_object_type
+{
+test_alwaysUpdatesParameters_invalid_object_type() unitTest;
+
+//	try to mock a parameter with an with an object value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c2						: C2;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	c2 := create C2() transient;
+	methodMock := classMock.mockMethod(C1::m8).alwaysUpdatesParameters("c1", c2);
+	
+epilog
+	delete classMock;
+	delete c2;
+end;
+}
+test_alwaysUpdatesParameters_invalid_primitive_type
+{
+test_alwaysUpdatesParameters_invalid_primitive_type() unitTest;
+
+//	try to mock a parameter with an invalid primitive value type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m3).alwaysUpdatesParameters("integer", 123.456);
+	
+epilog
+	delete classMock;
+end;
+}
 test_alwaysUpdatesParameters_subobject
 {
 test_alwaysUpdatesParameters_subobject() unitTest;
@@ -897,6 +1028,32 @@ begin
 	
 epilog
 	delete classMock;
+end;
+}
+test_alwaysUpdatesParameters_valid_object_type
+{
+test_alwaysUpdatesParameters_valid_object_type() unitTest;
+
+//	try to mock a parameter with an with an object value of the correct type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c1						: C1;
+	result					: C1;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	c1 := create C1() transient;
+	methodMock := classMock.mockMethod(C1::m8).alwaysUpdatesParameters("c1", c1);
+	mockedObject.m8(result);
+	assertEquals(c1, result);
+	
+epilog
+	delete classMock;
+	delete c1;
 end;
 }
 unitTestAfterClass
@@ -3267,6 +3424,51 @@ epilog
 	delete classMock;
 end;
 }
+test_returns_invalid_object_type
+{
+test_returns_invalid_object_type() unitTest;
+
+//	set the return value for a method mock using an object value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c2						: C2;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	c2 := create C2() transient;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m7).returns(c2);
+	
+epilog
+	delete classMock;
+	delete c2;
+end;
+}
+test_returns_invalid_primitive_type
+{
+test_returns_invalid_primitive_type() unitTest;
+
+//	set the return value for a method mock using a primitive value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m2).returns(123);
+	
+epilog
+	delete classMock;
+end;
+}
 test_returns_no_return
 {
 test_returns_no_return() unitTest;
@@ -3288,25 +3490,30 @@ epilog
 	delete classMock;
 end;
 }
-test_returns_wrong_type
+test_returns_valid_object_type
 {
-test_returns_wrong_type() unitTest;
+test_returns_valid_object_type() unitTest;
 
-//	set the return value for a method mock using a value of the wrong type
+//	set the return value for a method mock using an object value of the correct type
 
 vars
 	classMock				: JadeClassMock;
 	mockedObject			: C1;
 	methodMock				: JadeMethodMock;
+	c1						: C1;
+	result					: C1;
 
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
-	methodMock := classMock.mockMethod(C1::m2).returns(123);
+	c1 := create C1() transient;
+	methodMock := classMock.mockMethod(C1::m7).returns(c1);
+	result := mockedObject.m7().C1;
+	assertEquals(c1, result);
 	
 epilog
 	delete classMock;
+	delete c1;
 end;
 }
 unitTestAfterClass
@@ -3398,11 +3605,35 @@ epilog
 	delete classMock;
 end;
 }
-test_updatesParameters_invalid_type
+test_updatesParameters_invalid_object_type
 {
-test_updatesParameters_invalid_type() unitTest;
+test_updatesParameters_invalid_object_type() unitTest;
 
-//	try to mock a parameter with an invalid type
+//	try to mock a parameter with an with an object value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c2						: C2;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	c2 := create C2() transient;
+	methodMock := classMock.mockMethod(C1::m8).updatesParameters("c1", c2);
+	
+epilog
+	delete classMock;
+	delete c2;
+end;
+}
+test_updatesParameters_invalid_primitive_type
+{
+test_updatesParameters_invalid_primitive_type() unitTest;
+
+//	try to mock a parameter with an invalid primitive value type
 
 vars
 	classMock				: JadeClassMock;
@@ -3514,6 +3745,32 @@ epilog
 	delete classMock;
 end;
 }
+test_updatesParameters_valid_object_type
+{
+test_updatesParameters_valid_object_type() unitTest;
+
+//	try to mock a parameter with an with an object value of the correct type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c1						: C1;
+	result					: C1;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	c1 := create C1() transient;
+	methodMock := classMock.mockMethod(C1::m8).updatesParameters("c1", c1);
+	mockedObject.m8(result);
+	assertEquals(c1, result);
+	
+epilog
+	delete classMock;
+	delete c1;
+end;
+}
 unitTestAfterClass
 {
 unitTestAfterClass() unitTestAfterClass, updating;
@@ -3588,6 +3845,30 @@ epilog
 	delete classMock;
 end;
 }
+test_updatesProperties_invalid_object_type
+{
+test_updatesProperties_invalid_object_type() unitTest;
+
+//	mock a property with an object value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	c2						: C2;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	c2 := create C2() transient;
+	methodMock := classMock.mockMethod(C1::m7).updatesProperties(C1::c1, c2);
+	
+epilog
+	delete classMock;
+	delete c2;
+end;
+}
 test_updatesProperties_invalid_parameter_list
 {
 test_updatesProperties_invalid_parameter_list() unitTest;
@@ -3625,6 +3906,27 @@ begin
 	mockedObject := classMock.instantiateMockedObject().C1;
 	expectedException(JErr_TypeGuardFailed);
 	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C1, 123);
+	
+epilog
+	delete classMock;
+end;
+}
+test_updatesProperties_invalid_primitive_type
+{
+test_updatesProperties_invalid_primitive_type() unitTest;
+
+//	mock a property with a primitive value of the wrong type
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
+	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C1::name, 123);
 	
 epilog
 	delete classMock;
@@ -3740,25 +4042,30 @@ epilog
 	delete classMock;
 end;
 }
-test_updatesProperties_wrong_value_type
+test_updatesProperties_valid_object_type
 {
-test_updatesProperties_wrong_value_type() unitTest;
+test_updatesProperties_valid_object_type() unitTest;
 
-//	mock a property with a value of the wrong type
+//	mock a property with an object value of the correct type
 
 vars
 	classMock				: JadeClassMock;
 	mockedObject			: C1;
 	methodMock				: JadeMethodMock;
+	c1						: C1;
+	result					: C1;
 
 begin
 	classMock := mockManager.createClassMock(C1);
 	mockedObject := classMock.instantiateMockedObject().C1;
-	expectedException(JadeMockingFramework.MockError_MockParameterValidationFailed);
-	methodMock := classMock.mockMethod(C1::m2).updatesProperties(C1::name, 123);
+	c1 := create C1() transient;
+	methodMock := classMock.mockMethod(C1::m7).updatesProperties(C1::c1, c1);
+	mockedObject.m7();
+	assertEquals(c1, mockedObject.c1);
 	
 epilog
 	delete classMock;
+	delete c1;
 end;
 }
 unitTestAfterClass
@@ -4714,6 +5021,22 @@ end;
 m6
 {
 m6();
+
+begin
+
+end;
+}
+m7
+{
+m7() : C1;
+
+begin
+	return null;
+end;
+}
+m8
+{
+m8(c1 : C1 io);
 
 begin
 
