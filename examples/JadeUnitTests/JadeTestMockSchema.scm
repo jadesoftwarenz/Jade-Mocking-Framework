@@ -1,4 +1,4 @@
-﻿jadeVersionNumber "22.0.00";
+﻿jadeVersionNumber "99.0.00";
 schemaDefinition
 JadeTestMockSchema subschemaOf JadeMockSchema completeDefinition;
 importedPackageDefinitions
@@ -27,7 +27,6 @@ typeHeaders
 	Test_getCallHistory subclassOf MockUnitTests;
 	Test_getMethodMock subclassOf MockUnitTests;
 	Test_injectMockedObject subclassOf MockUnitTests;
-	Test_inputOutputParameters subclassOf MockUnitTests;
 	Test_instantiateMockedObject subclassOf MockUnitTests;
 	Test_isMockedObject subclassOf MockUnitTests;
 	Test_isObjectInstantiated subclassOf MockUnitTests;
@@ -269,14 +268,6 @@ typeDefinitions
 		unitTestAfterClass() updating, unitTestAfterClass;
 		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
-	Test_inputOutputParameters completeDefinition
-	(
-	jadeMethodDefinitions
-		test_io_parameters() unitTest;
-		test_output_parameters() unitTest;
-		unitTestAfterClass() updating, unitTestAfterClass;
-		unitTestBeforeClass() updating, unitTestBeforeClass;
-	)
 	Test_instantiateMockedObject completeDefinition
 	(
 	jadeMethodDefinitions
@@ -487,8 +478,10 @@ typeDefinitions
 	Test_whenCalledDoes completeDefinition
 	(
 	jadeMethodDefinitions
+		test_whenCalledDoes_io_parameters() unitTest;
 		test_whenCalledDoes_local_variables() unitTest;
 		test_whenCalledDoes_no_parameters() unitTest;
+		test_whenCalledDoes_output_parameters() unitTest;
 		test_whenCalledDoes_simple() unitTest;
 		test_whenCalledDoes_with_returns_local_variables() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
@@ -635,7 +628,6 @@ databaseDefinitions
 		Test_getCallHistory in "jadetestmockschema";
 		Test_getMethodMock in "jadetestmockschema";
 		Test_injectMockedObject in "jadetestmockschema";
-		Test_inputOutputParameters in "jadetestmockschema";
 		Test_instantiateMockedObject in "jadetestmockschema";
 		Test_isMockedObject in "jadetestmockschema";
 		Test_isObjectInstantiated in "jadetestmockschema";
@@ -1985,76 +1977,6 @@ end;
 unitTestBeforeClass
 {
 unitTestBeforeClass() unitTestBeforeClass, updating;
-
-begin
-	inheritMethod();
-end;
-}
-	)
-	Test_inputOutputParameters (
-	jadeMethodSources
-test_io_parameters
-{
-test_io_parameters() unitTest;
-
-
-vars
-	classMock				: JadeClassMock;
-	methodMock				: JadeMethodMock;
-	mockedObject			: C1;
-	result					: Integer;
-
-begin
-	classMock := mockManager.createClassMock(C1);
-	mockedObject := classMock.instantiateMockedObject().C1;
-
-	methodMock := classMock.mockMethod(C1::m9).whenCalledDoes("c := a + b + b;");
-	mockedObject.m9(8,6,result);
-	
-	// check that 'result' was assigned a value. 
-	assertEquals(20, result);
-	
-epilog
-	delete classMock;
-end;
-}
-test_output_parameters
-{
-test_output_parameters() unitTest;
-
-vars
-	classMock				: JadeClassMock;
-	methodMock				: JadeMethodMock;
-	mockedObject			: C1;
-	result					: Integer;
-
-begin
-	classMock := mockManager.createClassMock(C1);
-	mockedObject := classMock.instantiateMockedObject().C1;
-
-	methodMock := classMock.mockMethod(C1::m10).whenCalledDoes("c := a + b + b;");
-	mockedObject.m10(8,6,result);
-	
-	// check that 'result' was assigned a value. 
-	assertEquals(20, result);
-	
-epilog
-	delete classMock;
-end;
-}
-unitTestAfterClass
-{
-unitTestAfterClass() unitTestAfterClass, updating;
-
-begin
-	inheritMethod();
-end;
-}
-unitTestBeforeClass
-{
-unitTestBeforeClass() updating, unitTestBeforeClass;
-
-vars
 
 begin
 	inheritMethod();
@@ -4808,6 +4730,32 @@ end;
 	)
 	Test_whenCalledDoes (
 	jadeMethodSources
+test_whenCalledDoes_io_parameters
+{
+test_whenCalledDoes_io_parameters() unitTest;
+
+
+vars
+	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
+	mockedObject			: C1;
+	result					: Integer;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+
+	result := 12;
+	methodMock := classMock.mockMethod(C1::m9).whenCalledDoes("c := c + a + b + b;");
+	mockedObject.m9(8,6,result);
+	
+	// check that 'result' was assigned a value. 
+	assertEquals(32, result);
+	
+epilog
+	delete classMock;
+end;
+}
 test_whenCalledDoes_local_variables
 {
 test_whenCalledDoes_local_variables() unitTest;
@@ -4868,6 +4816,31 @@ begin
 	
 	// check the code was executed
 	assertEquals("after", mockedObject.name);
+	
+epilog
+	delete classMock;
+end;
+}
+test_whenCalledDoes_output_parameters
+{
+test_whenCalledDoes_output_parameters() unitTest;
+
+vars
+	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
+	mockedObject			: C1;
+	result					: Integer;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+
+	result := 123;
+	methodMock := classMock.mockMethod(C1::m10).whenCalledDoes("c := c + a + b + b;");
+	mockedObject.m10(8,6,result);
+	
+	// check that 'result' was assigned a value. 
+	assertEquals(20, result);
 	
 epilog
 	delete classMock;
