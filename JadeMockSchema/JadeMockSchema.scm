@@ -1518,7 +1518,7 @@ begin
 			methodToActionReceiver := receiver;
 		endif;
 		if zParameterCount > 0 then
-			process.executeTransientMethod(zMyMethodToAction, methodToActionReceiver, parameters);
+			process.executeTransientIOMethod(zMyMethodToAction, methodToActionReceiver, parameters);
 		else
 			process.executeTransientMethod(zMyMethodToAction, methodToActionReceiver);
 		endif;

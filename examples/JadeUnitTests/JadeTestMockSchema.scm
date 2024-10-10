@@ -1,4 +1,4 @@
-﻿jadeVersionNumber "22.0.00";
+﻿jadeVersionNumber "99.0.00";
 schemaDefinition
 JadeTestMockSchema subschemaOf JadeMockSchema completeDefinition;
 importedPackageDefinitions
@@ -478,8 +478,10 @@ typeDefinitions
 	Test_whenCalledDoes completeDefinition
 	(
 	jadeMethodDefinitions
+		test_whenCalledDoes_io_parameters() unitTest;
 		test_whenCalledDoes_local_variables() unitTest;
 		test_whenCalledDoes_no_parameters() unitTest;
+		test_whenCalledDoes_output_parameters() unitTest;
 		test_whenCalledDoes_simple() unitTest;
 		test_whenCalledDoes_with_returns_local_variables() unitTest;
 		unitTestAfterClass() updating, unitTestAfterClass;
@@ -529,6 +531,10 @@ typeDefinitions
 		m1(
 			integer: Integer io; 
 			string: String output): String;
+		m10(
+			a: Integer; 
+			b: Integer; 
+			c: Integer output);
 		m2(
 			integer: Integer io; 
 			string: String output): String;
@@ -538,6 +544,10 @@ typeDefinitions
 		m6();
 		m7(): C1;
 		m8(c1: C1 io);
+		m9(
+			a: Integer; 
+			b: Integer; 
+			c: Integer io);
 		serverMethod(
 			integer: Integer io; 
 			string: String output): String serverExecution;
@@ -4720,6 +4730,32 @@ end;
 	)
 	Test_whenCalledDoes (
 	jadeMethodSources
+test_whenCalledDoes_io_parameters
+{
+test_whenCalledDoes_io_parameters() unitTest;
+
+
+vars
+	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
+	mockedObject			: C1;
+	result					: Integer;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+
+	result := 12;
+	methodMock := classMock.mockMethod(C1::m9).whenCalledDoes("c := c + a + b + b;");
+	mockedObject.m9(8,6,result);
+	
+	// check that 'result' was assigned a value. 
+	assertEquals(32, result);
+	
+epilog
+	delete classMock;
+end;
+}
 test_whenCalledDoes_local_variables
 {
 test_whenCalledDoes_local_variables() unitTest;
@@ -4780,6 +4816,31 @@ begin
 	
 	// check the code was executed
 	assertEquals("after", mockedObject.name);
+	
+epilog
+	delete classMock;
+end;
+}
+test_whenCalledDoes_output_parameters
+{
+test_whenCalledDoes_output_parameters() unitTest;
+
+vars
+	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
+	mockedObject			: C1;
+	result					: Integer;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+
+	result := 123;
+	methodMock := classMock.mockMethod(C1::m10).whenCalledDoes("c := c + a + b + b;");
+	mockedObject.m10(8,6,result);
+	
+	// check that 'result' was assigned a value. 
+	assertEquals(20, result);
 	
 epilog
 	delete classMock;
@@ -4983,6 +5044,16 @@ begin
 	return m2(integer, string);
 end;
 }
+m10
+{
+m10(a,b: Integer; c: Integer output);
+
+vars
+
+begin
+
+end;
+}
 m2
 {
 m2(integer : Integer io; string : String output) : String;
@@ -5037,6 +5108,16 @@ end;
 m8
 {
 m8(c1 : C1 io);
+
+begin
+
+end;
+}
+m9
+{
+m9(a,b: Integer; c: Integer io);
+
+vars
 
 begin
 
