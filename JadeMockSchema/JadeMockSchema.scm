@@ -288,6 +288,7 @@ Membership is String because Subobject references (exclusive collection) cannot 
 		injectMockedObject(mockedObject: Object): JadeMock updating, abstract;
 		documentationText
 		`Records the specified object for which nominated method calls are mocked.`
+		unregisterMethodMocks(methodMock: JadeMethodMock) abstract;
 	)
 	JadeClassMock completeDefinition
 	(
@@ -351,12 +352,12 @@ The value must be one or more of the following Integer class constants:
 		documentationText
 		`Mock the exported method for a method that has been imported in a package.`
 		mockMethod(meth: Method): JadeMethodMock;
+		unregisterMethodMocks(methodMock: JadeMethodMock);
+		documentationText
+		`Unregister the method mock for all instances mocking this class.`
 		zRegisterMethodMocks(methodMock: JadeMethodMock) protected;
 		documentationText
 		`Register the method mock for all instances mocking this class.`
-		zUnregisterMethodMocks(methodMock: JadeMethodMock) protected;
-		documentationText
-		`Unregister the method mock for all instances mocking this class.`
 	externalMethodDefinitions
 		isMethodMockRegisteredForInstance(
 			mockedObject: Object; 
@@ -409,6 +410,9 @@ The value must be one or more of the following Integer class constants:
 		injectMockedObject(mockedInterfaceObject: JadeInterfaceMock): JadeInterfaceMock updating;
 		documentationText
 `Records the specified object for which nominated interface method calls are mocked.`
+		unregisterMethodMocks(methodMock: JadeMethodMock);
+		documentationText
+		`Unregister the method mock for all instances mocking this class.`
 		zRegisterInterfaceMethodMocks(mockedInterfaceObject: JadeInterfaceMock) updating, protected;
 		documentationText
 `Registers method mocks for each interface method, including all superinterfaces.`
@@ -772,7 +776,7 @@ begin
 	if any.isKindOf(Object) then
 		return selfType.getObjectStringForObject(any.Object);
 	endif;
-	
+
 	return any;
 end;
 }
@@ -969,6 +973,7 @@ delete() updating;
 // Purpose:		Destructor for a method mock.
 //
 //				Delete captured data.
+// 				Unregister the method mock for all instances.
 //				Unregister the method mock with the Object Manager.
 // --------------------------------------------------------------------------------
 
@@ -976,10 +981,16 @@ begin
 	if zMyMethodToAction <> null then
 		process.deleteTransientMethod(zMyMethodToAction);
 	endif;
+
+	// delete captured data
 	zMockCallHistories.purge();
 	zMockedParameters.purge();
 	zMockedProperties.purge();
 	
+	// unregister the method mock for all instances
+	zMock.unregisterMethodMocks(self);
+
+	// unregister the method mock with the Object Manager
 	zUnregisterMethodMock(self);
 end;
 }
@@ -1953,6 +1964,19 @@ injectMockedObject(mockedObject: Object): JadeMock updating, abstract;
 // Returns:		The class or interface mock instance.
 // --------------------------------------------------------------------------------
 }
+unregisterMethodMocks
+{
+unregisterMethodMocks(methodMock: JadeMethodMock) abstract;
+
+// --------------------------------------------------------------------------------
+// Method:		JadeInterfaceMock::zRegisterInterfaceMethodMock()
+//
+// Purpose:		Unregister the interface mock for the specified instance.
+//
+// Parameters:	mockedObject	- the instance that mocks the interface.
+//				mockedInterface	- the interface being mocked.
+// --------------------------------------------------------------------------------
+}
 	)
 	JadeClassMock (
 	jadeMethodSources
@@ -2005,29 +2029,21 @@ delete() updating;
 //
 // Purpose:		Destructor for a class mock.
 //
-//				Unregisters the method mocks for each method being mocked.
+//				Unregister the method mocks with the Object Manager and delete them.
 //				Delete any mocked objects that still exist. Destructors are not called.
+//				This will unregister the method mocks for each method being mocked.
 //				Note: injected mocked instances are not deleted.
-//
-//				The method mocks collection is purged by way of a parent-child relationship.
 // --------------------------------------------------------------------------------
 
 vars
-	mockedObject			: Object;
 	methodMock				: JadeMethodMock;
 
 begin
-	// unregister the method mocks with the Object Manager
-	foreach methodMock in zMethodMocks do
-		zUnregisterMethodMocks(methodMock);
-	endforeach;
+	// delete the method methods. the destructor will unregister the method mock with the Object Manager
+	zMethodMocks.purge();
 
-	// delete any mocked objects that still exists. destructors are not called.
-	foreach mockedObject in zMockedObjects do
-		if app.isValidObject(mockedObject) then
-			delete mockedObject;
-		endif;
-	endforeach;
+	// delete any mocked objects that still exist. destructors are not called.
+	zMockedObjects.purge();
 end;
 }
 deleteMockedObject
@@ -2334,10 +2350,6 @@ begin
 	if meth.isConstructor() or meth.isDestructor() then
 		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Cannot mock a constructor or destructor");
 	endif;
-	// validation - method cannot be systemOnly
-	if meth.__systemOnly() then
-		SystemException.raise_(JadeMockingFramework.MockError_MockParameterValidationFailed, "Cannot mock a systemOnly method");
-	endif;
 
 	methodMock := create JadeMethodMock(self, meth) transient;
 	
@@ -2353,6 +2365,53 @@ epilog
 		// if something went wrong registering the method mock delete the instance now
 		// to prevent unregistering the method mock twice when the class mock is deleted
 		delete methodMock;
+	endif;
+end;
+}
+unregisterMethodMocks
+{
+unregisterMethodMocks(methodMock : JadeMethodMock);
+
+// --------------------------------------------------------------------------------
+// Method:		JadeClassMock::zUnRegisterMethodMock()
+//
+// Purpose:		Unregister the method mock for all instances mocking this class.
+//
+//				The method mock is unregistered for either all instantiated and injected instances
+//				of all instances of the class with the previously specified lifetimes.
+//
+// Parameters:	methodMock		- the method mock to unregister.
+// --------------------------------------------------------------------------------
+
+vars
+	mockedMethod			: Method;
+	mockedObject			: Object;
+	oidString				: String;
+
+begin
+	mockedMethod := methodMock.getMockedMethod();
+	if mockedMethod.isTypeMethod() then
+		// unregister the method mock for a type method from the class the method is defined on
+		zUnregisterMethodMockForInstance(mockedMethod.schemaType, mockedMethod, methodMock);
+	else
+		if zInstancesLifetime = MockClassInstancesLifetime_NotSpecified then
+			// unregister the method mock for all instantiated instances
+			foreach mockedObject in zMockedObjects do
+				if isMethodMockRegisteredForInstance(mockedObject, mockedMethod) then
+					zUnregisterMethodMockForInstance(mockedObject, mockedMethod, methodMock);
+				endif;
+			endforeach;
+			// unregister the method mock for all injected instances
+			foreach oidString in zInjectedMockedObjects do
+				mockedObject := zUnnormaliseValue(oidString);
+				if isMethodMockRegisteredForInstance(mockedObject, mockedMethod) then
+					zUnregisterMethodMockForInstance(mockedObject, mockedMethod, methodMock);
+				endif;
+			endforeach;
+		else
+			// unregister the method mock for all instances of the class with the previously specified lifetimes
+			zUnregisterMethodMockForClassInstances(zMockedType.number, zInstancesLifetime, mockedMethod, methodMock);
+		endif;
 	endif;
 end;
 }
@@ -2394,48 +2453,6 @@ begin
 		else
 			// register the method mock for all instances of the class with the previously specified lifetimes
 			zRegisterMethodMockForClassInstances(zMockedType.number, zInstancesLifetime, mockedMethod, methodMock);
-		endif;
-	endif;
-end;
-}
-zUnregisterMethodMocks
-{
-zUnregisterMethodMocks(methodMock : JadeMethodMock) protected;
-
-// --------------------------------------------------------------------------------
-// Method:		JadeClassMock::zUnRegisterMethodMock()
-//
-// Purpose:		Unregister the method mock for all instances mocking this class.
-//
-//				The method mock is unregistered for either all instantiated and injected instances
-//				of all instances of the class with the previously specified lifetimes.
-//
-// Parameters:	methodMock		- the method mock to unregister.
-// --------------------------------------------------------------------------------
-
-vars
-	mockedMethod			: Method;
-	mockedObject			: Object;
-	oidString				: String;
-
-begin
-	mockedMethod := methodMock.getMockedMethod();
-	if mockedMethod.isTypeMethod() then
-		// unregister the method mock for a type method from the class the method is defined on
-		zUnregisterMethodMockForInstance(mockedMethod.schemaType, mockedMethod, methodMock);
-	else
-		if zInstancesLifetime = MockClassInstancesLifetime_NotSpecified then
-			// unregister the method mock for all instantiated instances
-			foreach mockedObject in zMockedObjects do
-				zUnregisterMethodMockForInstance(mockedObject, mockedMethod, methodMock);
-			endforeach;
-			// unregister the method mock for all injected instances
-			foreach oidString in zInjectedMockedObjects do
-				zUnregisterMethodMockForInstance(zUnnormaliseValue(oidString), mockedMethod, methodMock);
-			endforeach;
-		else
-			// unregister the method mock for all instances of the class with the previously specified lifetimes
-			zUnregisterMethodMockForClassInstances(zMockedType.number, zInstancesLifetime, mockedMethod, methodMock);
 		endif;
 	endif;
 end;
@@ -2624,6 +2641,25 @@ begin
 	zRegisterInterfaceMethodMocks(mockedInterfaceObject);
 	
 	return self;
+end;
+}
+unregisterMethodMocks
+{
+unregisterMethodMocks(methodMock : JadeMethodMock);
+
+// --------------------------------------------------------------------------------
+// Method:		JadeClassMock::zUnRegisterMethodMock()
+//
+// Purpose:		Unregister the method mock for all instances mocking this class.
+//
+//				The method mock is unregistered for either all instantiated and injected instances
+//				of all instances of the class with the previously specified lifetimes.
+//
+// Parameters:	methodMock		- the method mock to unregister.
+// --------------------------------------------------------------------------------
+
+begin
+	// nothing to do for Interface mocks
 end;
 }
 zRegisterInterfaceMethodMocks

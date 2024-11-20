@@ -1,4 +1,4 @@
-﻿jadeVersionNumber "99.0.00";
+﻿jadeVersionNumber "22.0.00";
 schemaDefinition
 JadeTestMockSchema subschemaOf JadeMockSchema completeDefinition;
 importedPackageDefinitions
@@ -18,6 +18,7 @@ typeHeaders
 	Test_alwaysReturns subclassOf MockUnitTests;
 	Test_alwaysUpdatesParameters subclassOf MockUnitTests;
 	Test_check_call_stack subclassOf MockUnitTests;
+	Test_clearAllMethodMocks subclassOf MockUnitTests;
 	Test_createClassMock subclassOf MockUnitTests;
 	Test_createInterfaceMock subclassOf MockUnitTests;
 	Test_deleteClassMock subclassOf MockUnitTests;
@@ -186,6 +187,15 @@ typeDefinitions
 		(
 			methodMock is myMethodMock;
 		)
+	)
+	Test_clearAllMethodMocks completeDefinition
+	(
+	jadeMethodDefinitions
+		test_clearAllMethodMocks() unitTest;
+		test_clearAllMethodMocks_reuse() unitTest;
+		test_clearAllMethodMocks_reuse_with_injected_objects() unitTest;
+		unitTestAfterClass() updating, unitTestAfterClass;
+		unitTestBeforeClass() updating, unitTestBeforeClass;
 	)
 	Test_createClassMock completeDefinition
 	(
@@ -619,6 +629,7 @@ databaseDefinitions
 		Test_alwaysReturns in "jadetestmockschema";
 		Test_alwaysUpdatesParameters in "jadetestmockschema";
 		Test_check_call_stack in "jadetestmockschema";
+		Test_clearAllMethodMocks in "jadetestmockschema";
 		Test_createClassMock in "jadetestmockschema";
 		Test_createInterfaceMock in "jadetestmockschema";
 		Test_deleteClassMock in "jadetestmockschema";
@@ -1124,6 +1135,140 @@ begin
 epilog
 	delete classMock;
 	delete callStack;
+end;
+}
+unitTestAfterClass
+{
+unitTestAfterClass() unitTestAfterClass, updating;
+
+begin
+	inheritMethod();
+end;
+}
+unitTestBeforeClass
+{
+unitTestBeforeClass() unitTestBeforeClass, updating;
+
+begin
+	inheritMethod();
+end;
+}
+	)
+	Test_clearAllMethodMocks (
+	jadeMethodSources
+test_clearAllMethodMocks
+{
+test_clearAllMethodMocks() unitTest;
+
+//	test that method mocks are cleared
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m2).returns("foobar");
+	result := mockedObject.callM1(0);
+	assertTrue(methodMock.wasReceivedOnceBy(mockedObject));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+	assertTrue(methodMock.wasReceivedWith(0, ""));
+	assertEquals("foobar", result);
+	classMock.clearAllMethodMocks();
+	assertFalse(app.isValidObject(methodMock));
+	assertTrue(app.isValidObject(mockedObject));
+
+epilog
+	delete classMock;
+end;
+}
+test_clearAllMethodMocks_reuse
+{
+test_clearAllMethodMocks_reuse() unitTest;
+
+//	test that method mocks are cleared
+
+vars
+	classMock				: JadeClassMock;
+	mockedObject			: C1;
+	methodMock				: JadeMethodMock;
+	result					: String;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	mockedObject := classMock.instantiateMockedObject().C1;
+	methodMock := classMock.mockMethod(C1::m2).returns("foo");
+	result := mockedObject.callM1(0);
+	assertTrue(methodMock.wasReceivedOnceBy(mockedObject));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+	assertTrue(methodMock.wasReceivedWith(0, ""));
+	assertEquals("foo", result);
+	classMock.clearAllMethodMocks();
+	assertFalse(app.isValidObject(methodMock));
+	assertTrue(app.isValidObject(mockedObject));
+	methodMock := classMock.mockMethod(C1::m2).returns("bar");
+	result := mockedObject.callM1(42);
+	assertTrue(methodMock.wasReceivedOnceBy(mockedObject));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+	assertTrue(methodMock.wasReceivedWith(42, ""));
+	assertEquals("bar", result);
+	classMock.clearAllMethodMocks();
+	assertFalse(app.isValidObject(methodMock));
+	assertTrue(app.isValidObject(mockedObject));
+
+epilog
+	delete classMock;
+end;
+}
+test_clearAllMethodMocks_reuse_with_injected_objects
+{
+test_clearAllMethodMocks_reuse_with_injected_objects() unitTest;
+
+//	inject an existing instance to the class
+
+vars
+	classMock				: JadeClassMock;
+	methodMock				: JadeMethodMock;
+	result					: String;
+	c1						: C1;
+
+begin
+	classMock := mockManager.createClassMock(C1);
+	c1 := create C1() transient;
+	classMock.injectMockedObject(c1);
+	methodMock := classMock.mockMethod(C1::m2).returns("foo");
+	result := c1.callM1(0);
+	assertTrue(methodMock.wasReceivedOnceBy(c1));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+	assertTrue(methodMock.wasReceivedWith(0, ""));
+	assertEquals("foo", result);
+	classMock.clearAllMethodMocks();
+	assertFalse(app.isValidObject(methodMock));
+	assertTrue(app.isValidObject(c1));
+	methodMock := classMock.mockMethod(C1::m2).returns("bar");
+	result := c1.callM1(42);
+	assertTrue(methodMock.wasReceivedOnceBy(c1));
+	assertTrue(methodMock.wasReceived());
+	assertTrue(methodMock.wasReceivedOnce());
+	assertEquals(1, methodMock.getCallCount());
+	assertTrue(methodMock.wasReceivedWith(42, ""));
+	assertEquals("bar", result);
+	assertTrue(app.isValidObject(c1));
+	
+epilog
+	delete classMock;
+	delete c1;
 end;
 }
 unitTestAfterClass
@@ -2668,8 +2813,10 @@ begin
 	delete methodMock;
 	integer := 1;
 	string := "foobar";
-	expectedException(JErr_ObjectNotFound);
+	// when the method mock is deleted the mock is unregistered so the real method is called
 	result := mockedObject.m1(integer, string);
+	assertEquals(2, integer);
+	assertEquals("foo2", string);
 	
 epilog
 	delete classMock;
@@ -3127,7 +3274,7 @@ begin
 	classMock2.injectMockedObject(mockedObject);
 	methodMock1 := classMock1.mockMethod(C1::m2).returns("mock1");
 	expectedException(JErr_MethodMockDuplicated);
-	methodMock2 := classMock2.mockMethod(C1::m2).returns("mock2");
+	methodMock2 := classMock2.mockMethod(C1::m2);//.returns("mock2");
 	
 epilog
 	delete classMock1;

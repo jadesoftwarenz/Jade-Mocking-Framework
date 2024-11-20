@@ -67,11 +67,10 @@ Parameters:
 
 Destructor for a class mock.
 
- Unregisters the method mocks for each method being mocked.
+ Unregister the method mocks with the Object Manager and delete them.
  Delete any mocked objects that still exist. Destructors are not called.
+ This will unregister the method mocks for each method being mocked.
  Note: injected mocked instances are not deleted.
-
- The method mocks collection is purged by way of a parent-child relationship.
 ```
     delete() updating;
 ```
@@ -223,6 +222,21 @@ Returns:
 
 The method mock instance.
 
+#### unregisterMethodMocks
+
+Unregister the method mock for all instances mocking this class.
+
+ The method mock is unregistered for either all instantiated and injected instances
+ of all instances of the class with the previously specified lifetimes.
+
+```
+    unregisterMethodMocks(methodMock : JadeMethodMock);
+```
+
+Parameters: 
+
+- methodMock - the method mock to unregister.
+
 #### zInstantiateMockedObject
 
 Instantiate a transient instance of the class being mocked. Constructors are not called.
@@ -322,21 +336,6 @@ Parameters:
 -  mockedMethod - the method being mocked.
 -  methodMock - the method mock for the method being mocked.
 
-#### zUnregisterMethodMocks
-
-Unregister the method mock for all instances mocking this class.
-
- The method mock is unregistered for either all instantiated and injected instances
- of all instances of the class with the previously specified lifetimes.
-
-```
-    zUnregisterMethodMocks(methodMock : JadeMethodMock) protected;
-```
-
-Parameters: 
-
-- methodMock - the method mock to unregister.
-
 ## Class JadeInterfaceMock
 
 Inherits from JadeMock. For an interface mock, the instance is the mocked interface, requests are forwarded to this object, mocking methods as required. The instance is instantiated by the user. Instances of any other class that implements the interface can be injected by the user.
@@ -420,6 +419,21 @@ Parameters:
 Returns: 
 
 Returns true if an interface mock is registered for the instance, or false if it is not.
+
+#### unregisterMethodMocks
+
+Unregister the method mock for all instances mocking this class.
+
+ The method mock is unregistered for either all instantiated and injected instances
+ of all instances of the class with the previously specified lifetimes.
+
+```
+    unregisterMethodMocks(methodMock : JadeMethodMock);
+```
+
+Parameters: 
+
+- methodMock - the method mock to unregister.
 
 #### zRegisterInterfaceMethodMock
 
@@ -641,6 +655,7 @@ Parameters:
 Destructor for a method mock.
 
  Delete captured data.
+ Unregister the method mock for all instances.
  Unregister the method mock with the Object Manager.
 ```
     delete() updating;
@@ -1146,6 +1161,19 @@ Parameters:
 Returns: 
 
 The class or interface mock instance.
+
+#### unregisterMethodMocks
+
+Unregister the interface mock for the specified instance.
+
+```
+    unregisterMethodMocks(methodMock: JadeMethodMock) abstract;
+```
+
+Parameters: 
+
+- mockedObject - the instance that mocks the interface.
+-  mockedInterface - the interface being mocked.
 
 ## Class JadeMockAnyArray
 
